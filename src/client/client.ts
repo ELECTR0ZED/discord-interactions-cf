@@ -20,6 +20,14 @@ class Client {
             throw new Error('Command must have a name.');
         }
 
+        if (this.commands.has(command.name)) {
+            throw new Error(`Command with name "${command.name}" already exists.`);
+        }
+
+        if (!handler || typeof handler !== 'function') {
+            throw new Error('Command handler must be a function.');
+        }
+
         this.commands.set(command.name, handler);
     }
 

@@ -6,14 +6,14 @@ class Client {
 
     async fetch(
         request: Request,
-        env: { publicKey: string },
+        env: { PUBLIC_KEY: string },
         ctx: any,
     ) {
         console.log('Interaction Received');
 
         const body = await request.text();
         const headers = request.headers;
-        const verified = await verifyKey(headers, body, env.publicKey);
+        const verified = await verifyKey(headers, body, env.PUBLIC_KEY);
 
         if (!verified) {
             return {

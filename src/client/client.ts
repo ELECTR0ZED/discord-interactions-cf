@@ -8,7 +8,7 @@ class Client {
 
     constructor() {}
 
-    async addCommand(command: SlashCommandBuilder, handler: Function): Promise<void> {
+    async addCommand(command: SlashCommandBuilder, handler: (interaction: APIInteraction, env: any) => Promise<Response>): Promise<void> {
         if (typeof command.toJSON !== 'function') {
             throw new Error('Invalid command object. Ensure it is built using SlashCommandBuilder.');
         }

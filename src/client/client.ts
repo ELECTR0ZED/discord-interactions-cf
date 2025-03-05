@@ -1,8 +1,27 @@
 import { APIInteraction, APIInteractionResponsePong, ApplicationCommandType, InteractionResponseType, InteractionType } from "discord-api-types/v10";
 import verifyKey from "../helpers/verifyKey";
+import { assert } from "console";
+import { SlashCommandBuilder } from "@discordjs/builders";
 
 class Client {
+    commands: Map<string, Function> = new Map();
+
     constructor() {}
+
+    async addCommand(command: SlashCommandBuilder, handler: Function): Promise<void> {
+        if (typeof command.toJSON !== 'function') {
+            throw new Error('Invalid command object. Ensure it is built using SlashCommandBuilder.');
+        }
+
+        const json = command.toJSON();
+        assert(json && typeof json === 'object', 'Invalid command object. Ensure it is built using SlashCommandBuilder.');
+
+        if (!command.name) {
+            throw new Error('Command must have a name.');
+        }
+
+        this.commands.set(command.name, handler);
+    }
 
     async fetch(
         request: Request,
@@ -40,6 +59,12 @@ class Client {
                 switch (interaction.data.type) {
                     case ApplicationCommandType.ChatInput:
                         // Handle chat input commands
+                        const handler = this.commands.get(interaction.data.name);
+                        if (handler) {
+                            await handler(interaction, env);
+                        } else {
+                            console.error('Unknown command:', interaction.data.name);
+                        }
                         break;
                     default:
                         console.error('Unknown command type:', interaction.data.type);

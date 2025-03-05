@@ -1,3 +1,5 @@
+import { Buffer } from 'node:buffer';
+
 export default async function verifyKey(
     headers: Headers,
     body: string,

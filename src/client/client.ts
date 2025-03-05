@@ -2,21 +2,18 @@ import { APIInteraction, APIInteractionResponsePong, InteractionResponseType, In
 import verifyKey from "../helpers/verifyKey";
 
 class Client {
-    publicKey: string;
-    constructor(publicKey: string) {
-        this.publicKey = publicKey;
-    }
+    constructor() {}
 
     async fetch(
         request: Request,
-        env: any,
+        env: { publicKey: string },
         ctx: any,
     ) {
         console.log('Interaction Received');
 
         const body = await request.text();
         const headers = request.headers;
-        const verified = await verifyKey(headers, body, this.publicKey);
+        const verified = await verifyKey(headers, body, env.publicKey);
 
         if (!verified) {
             return {

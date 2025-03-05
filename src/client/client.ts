@@ -16,10 +16,9 @@ class Client {
         const verified = await verifyKey(headers, body, env.PUBLIC_KEY);
 
         if (!verified) {
-            return {
+            return new Response('Invalid request signature', {
                 status: 401,
-                body: JSON.stringify({ message: "Invalid request" }),
-            };
+            });
         }
 
         const interaction = JSON.parse(body) as APIInteraction;

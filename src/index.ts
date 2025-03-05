@@ -1,3 +1,5 @@
 import Client from './client/client';
 
-export default Client;
+export { Client };
+
+export * from '@discordjs/builders';

@@ -1,14 +1,14 @@
 import { APIInteraction, APIInteractionResponsePong, ApplicationCommandType, InteractionResponseType, InteractionType } from "discord-api-types/v10";
 import verifyKey from "../helpers/verifyKey";
 import { assert } from "console";
-import { SlashCommandBuilder } from "@discordjs/builders";
+import { SlashCommandBuilder } from "../index";
 
 class Client {
-    commands: Map<string, Function> = new Map();
+    commands: Map<string, SlashCommandBuilder> = new Map();
 
     constructor() {}
 
-    async addCommand(command: SlashCommandBuilder, handler: (interaction: APIInteraction, env: any) => Promise<Response>): Promise<void> {
+    async addCommand(command: SlashCommandBuilder): Promise<void> {
         if (typeof command.toJSON !== 'function') {
             throw new Error('Invalid command object. Ensure it is built using SlashCommandBuilder.');
         }
@@ -24,11 +24,7 @@ class Client {
             throw new Error(`Command with name "${command.name}" already exists.`);
         }
 
-        if (!handler || typeof handler !== 'function') {
-            throw new Error('Command handler must be a function.');
-        }
-
-        this.commands.set(command.name, handler);
+        this.commands.set(command.name, command);
     }
 
     async fetch(
@@ -67,9 +63,9 @@ class Client {
                 switch (interaction.data.type) {
                     case ApplicationCommandType.ChatInput:
                         // Handle chat input commands
-                        const handler = this.commands.get(interaction.data.name);
-                        if (handler) {
-                            await handler(interaction, env);
+                        const command = this.commands.get(interaction.data.name);
+                        if (command) {
+                            await command.execute(interaction);
                         } else {
                             console.error('Unknown command:', interaction.data.name);
                         }

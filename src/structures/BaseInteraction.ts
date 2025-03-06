@@ -3,10 +3,14 @@ import {
     APIBaseInteraction,
     InteractionType,
     APIEntitlement,
+    APIPartialInteractionGuild,
+    APIPartialGuild,
 } from 'discord-api-types/v10';
 import { PermissionsBitField } from 'discord.js';
 import { Base } from './Base';
 import Client from '../client/client';
+import { PartialGuild } from './PartialGuild';
+import { PartialChannel } from './PartialChannel';
 
 type APIBaseInteractionComplete = APIBaseInteraction<InteractionType, any>;
 
@@ -15,8 +19,9 @@ class BaseInteraction extends Base {
     type: APIBaseInteractionComplete['type'];
     readonly token: APIBaseInteractionComplete['token'];
     applicationId: APIBaseInteractionComplete['application_id'];
-    channel: APIBaseInteractionComplete['channel'];
+    channel: PartialChannel | APIBaseInteractionComplete['channel'];
     guildId: APIBaseInteractionComplete['guild_id'];
+    guild?: PartialGuild | APIPartialInteractionGuild;
     user: APIBaseInteractionComplete['user'];
     member: APIBaseInteractionComplete['member'];
     version: APIBaseInteractionComplete['version'];
@@ -44,10 +49,13 @@ class BaseInteraction extends Base {
         this.applicationId = data.application_id;
 
         // The channel the interaction was sent in
-        this.channel = data.channel;
+        this.channel = data.channel ? new PartialChannel(this.client, data.channel) : undefined;
+
+        // The guild id the interaction was sent in
+        this.guildId = data.guild_id;
 
         // The guild the interaction was sent in
-        this.guildId = data.guild_id;
+        this.guild = data.guild ? new PartialGuild(this.client, data.guild as unknown as APIPartialGuild) : undefined;
 
         // The user that sent the interaction
         this.user = data.user;

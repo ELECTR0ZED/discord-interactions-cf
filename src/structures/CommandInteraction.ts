@@ -16,6 +16,7 @@ import { InteractionWebhook } from './InteractionWebhook';
 import { InteractionResponses } from './interfaces/InteractionResponses';
 import Client from '../client/client';
 import { User } from './User';
+import { Role } from './Role';
 import { GuildMember } from './GuildMember';
 import { PartialChannel } from './PartialChannel';
 
@@ -24,7 +25,7 @@ type CommandInteractionOption = {
 	name: string;
 	type: ApplicationCommandOptionType;
 	autocomplete?: boolean;
-	value?: string | number | boolean;
+	value?: string;
 	options?: CommandInteractionOption[];
 	user?: User;
 	member?: GuildMember | APIGuildMember;
@@ -77,24 +78,24 @@ class CommandInteraction extends BaseInteraction {
 			type: option.type,
 		} as CommandInteractionOption;
 
-		if ('value' in option) result.value = option.value;
-		if ('options' in option) result.options = option.options.map(opt => this.transformOption(opt, resolved));
+		if ('value' in option) result.value = option.value as CommandInteractionOption['value'];
+		if ('options' in option && option.options) result.options = option.options.map(opt => this.transformOption(opt, resolved));
 
 		if (resolved) {
-		const user = resolved.users?.[option.value];
-		if (user) result.user = user;
+			const user = resolved.users?.[option.value];
+			if (user) result.user = new User(this.client, user);
 
-		const member = resolved.members?.[option.value];
-		if (member) result.member = this.guild?.members._add({ user, ...member }) ?? member;
+			const member = resolved.members?.[option.value];
+			if (member) result.member = new GuildMember(this.client, member, this.guild);
 
-		const channel = resolved.channels?.[option.value];
-		if (channel) result.channel = this.client.channels._add(channel, this.guild) ?? channel;
+			const channel = resolved.channels?.[option.value];
+			if (channel) result.channel = new PartialChannel(this.client, channel);
 
-		const role = resolved.roles?.[option.value];
-		if (role) result.role = this.guild?.roles._add(role) ?? role;
+			const role = resolved.roles?.[option.value];
+			if (role) result.role = new Role(this.client, role);
 
-		const attachment = resolved.attachments?.[option.value];
-		if (attachment) result.attachment = new Attachment(attachment);
+			const attachment = resolved.attachments?.[option.value];
+			if (attachment) result.attachment = new Attachment(attachment);
 		}
 
 		return result;

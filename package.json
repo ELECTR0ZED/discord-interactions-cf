@@ -16,6 +16,8 @@
   },
   "dependencies": {
     "@discordjs/builders": "^1.10.1",
-    "discord-api-types": "^0.37.119"
+    "@sapphire/snowflake": "^3.5.5",
+    "discord-api-types": "^0.37.119",
+    "discord.js": "^14.18.0"
   }
 }

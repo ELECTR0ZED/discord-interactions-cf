@@ -2,11 +2,15 @@ import { APIInteraction, APIInteractionResponsePong, ApplicationCommandType, Int
 import verifyKey from "../helpers/verifyKey";
 import { assert } from "console";
 import { SlashCommandBuilder } from "../index";
+import { REST, DefaultRestOptions } from '@discordjs/rest';
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
+    rest: REST;
 
-    constructor() {}
+    constructor() {
+        this.rest = new REST(DefaultRestOptions);
+    }
 
     async addCommand(command: SlashCommandBuilder): Promise<void> {
         if (typeof command.toJSON !== 'function') {

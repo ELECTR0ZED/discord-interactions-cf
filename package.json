@@ -1,5 +1,5 @@
 {
-  "name": "discord-interactions-cloudflare",
+  "name": "discord-interactions-cf",
   "version": "0.0.1",
   "description": "",
   "main": "dist/index.js",

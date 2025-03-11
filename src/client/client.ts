@@ -6,10 +6,9 @@ import { REST, DefaultRestOptions } from '@discordjs/rest';
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
-    rest: REST;
 
-    constructor() {
-        this.rest = new REST(DefaultRestOptions);
+    get rest() {
+        return new REST(DefaultRestOptions);
     }
 
     async addCommand(command: SlashCommandBuilder): Promise<void> {

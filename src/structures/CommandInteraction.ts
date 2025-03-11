@@ -12,8 +12,6 @@ import {
 } from 'discord-api-types/v10';
 import { Attachment } from './Attachment';
 import { BaseInteraction } from './BaseInteraction';
-import { InteractionWebhook } from './InteractionWebhook';
-import { InteractionResponses } from './interfaces/InteractionResponses';
 import Client from '../client/client';
 import { User } from './User';
 import { Role } from './Role';
@@ -82,20 +80,20 @@ class CommandInteraction extends BaseInteraction {
 		if ('options' in option && option.options) result.options = option.options.map(opt => this.transformOption(opt, resolved));
 
 		if (resolved) {
-			const user = resolved.users?.[option.value];
-			if (user) result.user = new User(this.client, user);
+			// const user = resolved.users?.[option.value];
+			// if (user) result.user = new User(this.client, user);
 
-			const member = resolved.members?.[option.value];
-			if (member) result.member = new GuildMember(this.client, member, this.guild);
+			// const member = resolved.members?.[option.value];
+			// if (member) result.member = new GuildMember(this.client, member, this.guild);
 
-			const channel = resolved.channels?.[option.value];
-			if (channel) result.channel = new PartialChannel(this.client, channel);
+			// const channel = resolved.channels?.[option.value];
+			// if (channel) result.channel = new PartialChannel(this.client, channel);
 
-			const role = resolved.roles?.[option.value];
-			if (role) result.role = new Role(this.client, role);
+			// const role = resolved.roles?.[option.value];
+			// if (role) result.role = new Role(this.client, role);
 
-			const attachment = resolved.attachments?.[option.value];
-			if (attachment) result.attachment = new Attachment(attachment);
+			// const attachment = resolved.attachments?.[option.value];
+			// if (attachment) result.attachment = new Attachment(attachment);
 		}
 
 		return result;
@@ -113,6 +111,6 @@ class CommandInteraction extends BaseInteraction {
 	awaitModalSubmit() {}
 }
 
-InteractionResponses.applyToClass(CommandInteraction, ['deferUpdate', 'update']);
+//InteractionResponses.applyToClass(CommandInteraction, ['deferUpdate', 'update']);
 
 export { CommandInteraction };

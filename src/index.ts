@@ -1,9 +1,6 @@
 import Client from './client/client';
 import { SlashCommandBuilder as OriginalSlashCommandBuilder } from '@discordjs/builders';
-
-export { Client };
-
-export * from '@discordjs/builders';
+import { registerCommands } from './utils/registerCommands';
 
 class SlashCommandBuilder extends OriginalSlashCommandBuilder {
     private executeFunction: ((interaction: any) => Promise<void>) | null = null;
@@ -25,4 +22,5 @@ class SlashCommandBuilder extends OriginalSlashCommandBuilder {
     }
 }
 
-export { SlashCommandBuilder };
+export * from '@discordjs/builders';
+export { SlashCommandBuilder, registerCommands, Client };

@@ -3,6 +3,7 @@ import verifyKey from "../helpers/verifyKey";
 import { assert } from "console";
 import { SlashCommandBuilder } from "../index";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
+import { registerCommands } from "../utils/registerCommands";
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
@@ -32,9 +33,26 @@ class Client {
 
     async fetch(
         request: Request,
-        env: { PUBLIC_KEY: string },
+        env: { PUBLIC_KEY: string, TOKEN: string, CLIENT_ID: string },
         ctx: any,
     ) {
+        const url = new URL(request.url);
+
+        if (url.pathname === '/register') {
+            const authHeader = request.headers.get('Authorization');
+            if (!authHeader || authHeader !== `Bearer ${env.TOKEN}`) {
+                return new Response('Unauthorized', {
+                    status: 401,
+                });
+            }
+
+            // Register commands with Discord
+            await this.registerCommands(env.TOKEN, env.CLIENT_ID);
+            return new Response('Commands registered', {
+                status: 200,
+            });
+        }
+
         const body = await request.text();
         const headers = request.headers;
 
@@ -91,6 +109,12 @@ class Client {
                 console.error('Unknown interaction type:', (interaction as APIInteraction).type);
                 break;
         }
+    }
+
+    async registerCommands(token: string, clientId: string) {
+        const commands = Array.from(this.commands.values()).map(command => command.toJSON());
+        
+        await registerCommands(commands, token, clientId);
     }
 
     

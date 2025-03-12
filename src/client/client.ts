@@ -86,7 +86,7 @@ class Client {
                         // Handle chat input commands
                         const command = this.commands.get(interaction.data.name);
                         if (command) {
-                            await command.execute(interaction);
+                            return await command.execute(interaction);
                         } else {
                             console.error('Unknown command:', interaction.data.name);
                         }

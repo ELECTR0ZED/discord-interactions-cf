@@ -3,9 +3,9 @@ import { SlashCommandBuilder as OriginalSlashCommandBuilder } from '@discordjs/b
 import { registerCommands } from './utils/registerCommands';
 
 class SlashCommandBuilder extends OriginalSlashCommandBuilder {
-    private executeFunction: ((interaction: any) => Promise<void>) | null = null;
+    private executeFunction: ((interaction: any) => Promise<Response>) | null = null;
 
-    setExecute(fn: (interaction: any) => Promise<void>) {
+    setExecute(fn: (interaction: any) => Promise<Response>) {
         if (fn.constructor.name !== 'AsyncFunction') {
             throw new Error('Execute function must be asynchronous');
         }
@@ -15,7 +15,7 @@ class SlashCommandBuilder extends OriginalSlashCommandBuilder {
 
     async execute(interaction: any) {
         if (this.executeFunction) {
-            await this.executeFunction(interaction);
+            return await this.executeFunction(interaction);
         } else {
             throw new Error('No execute function set');
         }

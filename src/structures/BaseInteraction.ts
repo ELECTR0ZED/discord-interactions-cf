@@ -61,7 +61,7 @@ class BaseInteraction extends Base {
 
         // If the interaction was sent in a guild, the member which sent it
         if (data.member && this.guild) {
-            this.member = data.member ? new InteractionGuildMember(this.client, data.member, this.guild) : undefined;
+            this.member = new InteractionGuildMember(this.client, data.member, this.guild);
         }
 
         // The user that sent the interaction

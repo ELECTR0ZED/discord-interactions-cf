@@ -1,5 +1,5 @@
 import { APIAttachment } from "discord-api-types/v10";
-import { AttachmentFlagsBitField, basename } from "discord.js";
+import { AttachmentFlagsBitField } from "discord.js";
 
 /**
  * @typedef {Object} AttachmentPayload
@@ -75,11 +75,6 @@ class Attachment {
         }
 
         this.title = data.title;
-    }
-
-    // Whether or not this attachment has been marked as a spoiler
-    get spoiler() {
-        return basename(this.url ?? this.name).startsWith('SPOILER_');
     }
 }
 

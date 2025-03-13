@@ -18,7 +18,7 @@ class Client {
         }
 
         const json = command.toJSON();
-        if (json && typeof json === 'object') {
+        if (json && typeof json !== 'object') {
             throw new Error('Invalid command object. Ensure it is built using SlashCommandBuilder.');
         }
 

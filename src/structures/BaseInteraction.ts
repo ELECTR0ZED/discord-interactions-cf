@@ -4,7 +4,6 @@ import {
     InteractionType,
     APIEntitlement,
 } from 'discord-api-types/v10';
-import { PermissionsBitField } from 'discord.js';
 import { Base } from './Base';
 import Client from '../client/client';
 import { PartialInteractionGuild } from './PartialInteractionGuild';
@@ -27,7 +26,7 @@ class BaseInteraction extends Base {
     readonly token: APIBaseInteractionComplete['token'];
     version: APIBaseInteractionComplete['version'];
     message: APIBaseInteractionComplete['message'];
-    appPermissions: PermissionsBitField;
+    appPermissions: APIBaseInteractionComplete['app_permissions'];
     locale: APIBaseInteractionComplete['locale'];
     guildLocale: APIBaseInteractionComplete['guild_locale'];
     entitlements: Map<APIEntitlement['id'], APIEntitlement>;
@@ -76,7 +75,7 @@ class BaseInteraction extends Base {
         this.message = data.message;
 
         // Set of permissions the bot has in the channel the interaction was sent in
-        this.appPermissions = new PermissionsBitField(BigInt(data.app_permissions)).freeze();
+        this.appPermissions = data.app_permissions;
 
         // The locale of the user who sent the interaction
         this.locale = data.locale;

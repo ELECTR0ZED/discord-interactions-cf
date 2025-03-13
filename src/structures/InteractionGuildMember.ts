@@ -1,7 +1,6 @@
 import { APIInteractionGuildMember, APIAvatarDecorationData } from "discord-api-types/v10";
 import Client from "../client/client";
 import { PartialInteractionGuild } from "./PartialInteractionGuild";
-import { GuildMemberFlagsBitField, PermissionsBitField } from 'discord.js';
 import { Base } from './Base.js';
 import { ImageURLOptions } from '@discordjs/rest';
 import { User } from './User';
@@ -18,14 +17,14 @@ class InteractionGuildMember extends Base {
     premiumSinceTimestamp: number | null;
     deaf: APIInteractionGuildMember['deaf'];
     mute: APIInteractionGuildMember['mute'];
-    flags: GuildMemberFlagsBitField
+    flags: APIInteractionGuildMember['flags'];
     pending: APIInteractionGuildMember['pending'];
     communicationDisabledUntilTimestamp: number | null;
     avatarDecorationData: {
         asset: APIAvatarDecorationData['asset'];
         skuId: APIAvatarDecorationData['sku_id']; 
     } | null;
-    permissions?: PermissionsBitField;
+    permissions: APIInteractionGuildMember['permissions'];
 
     constructor(client: Client, data: APIInteractionGuildMember, guild: PartialInteractionGuild) {
         super(client);
@@ -40,14 +39,14 @@ class InteractionGuildMember extends Base {
         this.premiumSinceTimestamp = data.premium_since ? Date.parse(data.premium_since) : null;
         this.deaf = data.deaf;
         this.mute = data.mute;
-        this.flags = new GuildMemberFlagsBitField(data.flags).freeze();
+        this.flags = data.flags;
         this.pending = data.pending ?? false;
         this.communicationDisabledUntilTimestamp = data.communication_disabled_until ? Date.parse(data.communication_disabled_until) : null;
         this.avatarDecorationData = data.avatar_decoration_data ? {
 			asset: data.avatar_decoration_data.asset,
 			skuId: data.avatar_decoration_data.sku_id,
 		} : null;
-        this.permissions = data.permissions ? new PermissionsBitField(BigInt(data.permissions)).freeze() : undefined;
+        this.permissions = data.permissions;
     }
 
     avatarURL(options: ImageURLOptions = {}) {

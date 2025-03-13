@@ -1,16 +1,6 @@
 import { APIAttachment } from "discord-api-types/v10";
-import { AttachmentFlagsBitField, basename } from "discord.js";
 
-/**
- * @typedef {Object} AttachmentPayload
- * @property {?string} name The name of the attachment
- * @property {Stream|BufferResolvable} attachment The attachment in this payload
- * @property {?string} description The description of the attachment
- */
-
-/**
- * Represents an attachment
- */
+// Represents an attachment
 class Attachment {
     attachment: APIAttachment['url'];
     name: APIAttachment['filename'];
@@ -25,7 +15,7 @@ class Attachment {
     ephemeral: boolean;
     duration: APIAttachment['duration_secs'];
     waveform: APIAttachment['waveform'];
-    flags: AttachmentFlagsBitField;
+    flags: APIAttachment['flags'];
     title: APIAttachment['title'];
 
     constructor(data: APIAttachment) {
@@ -68,18 +58,14 @@ class Attachment {
         this.waveform = data.waveform;
 
         // The flags of this attachment
-        if ('flags' in data) {
-            this.flags = new AttachmentFlagsBitField(data.flags).freeze();
-        } else {
-            this.flags ??= new AttachmentFlagsBitField().freeze();
-        }
+        this.flags = data.flags;
 
         this.title = data.title;
     }
 
     // Whether or not this attachment has been marked as a spoiler
     get spoiler() {
-        return basename(this.url ?? this.name).startsWith('SPOILER_');
+        return (this.url ?? this.name).startsWith('SPOILER_');
     }
 }
 

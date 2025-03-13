@@ -2,7 +2,6 @@ import { APIAvatarDecorationData, APIUser } from 'discord-api-types/v10';
 import { userMention } from '@discordjs/formatters';
 import { calculateUserDefaultAvatarIndex, ImageURLOptions } from '@discordjs/rest';
 import { DiscordSnowflake } from '@sapphire/snowflake';
-import { UserFlagsBitField } from 'discord.js';
 import { Base } from './Base';
 import Client from '../client/client';
 
@@ -21,7 +20,7 @@ class User extends Base {
 	locale: APIUser['locale'];
 	verified: APIUser['verified'];
 	email: APIUser['email'];
-	flags: UserFlagsBitField | null;
+	flags: APIUser['flags'];
 	premiumType: APIUser['premium_type'];
 	publicFlags: APIUser['public_flags'];
 	avatarDecorationData: {
@@ -46,7 +45,7 @@ class User extends Base {
 		this.locale = data.locale;
 		this.verified = data.verified;
 		this.email = data.email;
-		this.flags = new UserFlagsBitField(data.public_flags);
+		this.flags = data.flags;
 		this.premiumType = data.premium_type;
 		this.publicFlags = data.public_flags;
 		this.avatarDecorationData = data.avatar_decoration_data ? {

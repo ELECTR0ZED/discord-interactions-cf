@@ -63,7 +63,7 @@ class BaseInteraction extends Base {
         }
 
         // The user that sent the interaction
-        this.user = data.user ? new User(this.client, data.user) : undefined;
+        this.user = data.user ? new User(this.client, data.user ?? data.member?.user) : undefined;
 
         // The token of the interaction
         this.token = data.token;

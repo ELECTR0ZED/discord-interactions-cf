@@ -1,6 +1,5 @@
 import { APIInteraction, APIInteractionResponsePong, ApplicationCommandType, InteractionResponseType, InteractionType } from "discord-api-types/v10";
 import verifyKey from "../helpers/verifyKey";
-import { assert } from "console";
 import { SlashCommandBuilder } from "../index";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
 import { registerCommands } from "../utils/registerCommands";
@@ -19,7 +18,9 @@ class Client {
         }
 
         const json = command.toJSON();
-        assert(json && typeof json === 'object', 'Invalid command object. Ensure it is built using SlashCommandBuilder.');
+        if (json && typeof json === 'object') {
+            throw new Error('Invalid command object. Ensure it is built using SlashCommandBuilder.');
+        }
 
         if (!command.name) {
             throw new Error('Command must have a name.');

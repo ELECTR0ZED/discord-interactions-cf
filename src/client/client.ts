@@ -88,7 +88,7 @@ class Client {
                         // Handle chat input commands
                         const command = this.commands.get(interaction.data.name);
                         if (command) {
-                            return await command.execute( new CommandInteraction(this, interaction) );
+                            return this.respond(await command.execute( new CommandInteraction(this, interaction) ));
                         } else {
                             console.error('Unknown command:', interaction.data.name);
                         }
@@ -119,7 +119,13 @@ class Client {
         await registerCommands(commands, token, clientId);
     }
 
-    
+    private respond(payload: any) {
+        return new Response(JSON.stringify(payload), {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+    }
 }
 
 export default Client;

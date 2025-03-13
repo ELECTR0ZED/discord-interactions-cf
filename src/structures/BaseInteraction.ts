@@ -4,29 +4,31 @@ import {
     InteractionType,
     APIEntitlement,
     APIPartialInteractionGuild,
-    APIPartialGuild,
 } from 'discord-api-types/v10';
 import { PermissionsBitField } from 'discord.js';
 import { Base } from './Base';
 import Client from '../client/client';
-import { PartialGuild } from './PartialGuild';
-import { PartialChannel } from './PartialChannel';
+import { PartialInteractionGuild } from './PartialInteractionGuild';
+import { PartialInteractionChannel } from './PartialInteractionChannel';
+import { InteractionGuildMember } from './InteractionGuildMember';
+import { User } from './User';
 
 type APIBaseInteractionComplete = APIBaseInteraction<InteractionType, any>;
 
 class BaseInteraction extends Base {
     id: APIBaseInteractionComplete['id'];
-    type: APIBaseInteractionComplete['type'];
-    readonly token: APIBaseInteractionComplete['token'];
     applicationId: APIBaseInteractionComplete['application_id'];
-    channel: PartialChannel | APIBaseInteractionComplete['channel'];
+    type: APIBaseInteractionComplete['type'];
+    data: APIBaseInteractionComplete['data'];
+    guild?: PartialInteractionGuild;
     guildId: APIBaseInteractionComplete['guild_id'];
-    guild?: PartialGuild | APIPartialInteractionGuild;
-    user: APIBaseInteractionComplete['user'];
-    member: APIBaseInteractionComplete['member'];
+    channel?: PartialInteractionChannel;
+    member?: InteractionGuildMember;
+    user?: User;
+    readonly token: APIBaseInteractionComplete['token'];
     version: APIBaseInteractionComplete['version'];
+    message: APIBaseInteractionComplete['message'];
     appPermissions: PermissionsBitField;
-    memberPermissions?: PermissionsBitField;
     locale: APIBaseInteractionComplete['locale'];
     guildLocale: APIBaseInteractionComplete['guild_locale'];
     entitlements: Map<APIEntitlement['id'], APIEntitlement>;
@@ -39,41 +41,44 @@ class BaseInteraction extends Base {
         // The interactions ID
         this.id = data.id;
 
-        // The type of interaction
-        this.type = data.type;
-
-        // The token of the interaction
-        this.token = data.token;
-
         // The application ID of the interaction
         this.applicationId = data.application_id;
 
-        // The channel the interaction was sent in
-        this.channel = data.channel ? new PartialChannel(this.client, data.channel) : undefined;
+        // The type of interaction
+        this.type = data.type;
+
+        // The command data payload
+        this.data = data.data;
+
+        // The guild the interaction was sent in
+        this.guild = data.guild ? new PartialInteractionGuild(this.client, data.guild) : undefined;
 
         // The guild id the interaction was sent in
         this.guildId = data.guild_id;
 
-        // The guild the interaction was sent in
-        this.guild = data.guild ? new PartialGuild(this.client, data.guild as unknown as APIPartialGuild) : undefined;
-
-        // The user that sent the interaction
-        this.user = data.user;
+        // The channel the interaction was sent in
+        this.channel = data.channel ? new PartialInteractionChannel(this.client, data.channel) : undefined;
 
         // If the interaction was sent in a guild, the member which sent it
-        this.member = data.member;
+        if (data.member && this.guild) {
+            this.member = data.member ? new InteractionGuildMember(this.client, data.member, this.guild) : undefined;
+        }
+
+        // The user that sent the interaction
+        this.user = data.user ? new User(this.client, data.user) : undefined;
+
+        // The token of the interaction
+        this.token = data.token;
 
         // The version
         this.version = data.version;
 
+        // For components, the message they were attached to
+        this.message = data.message;
+
         // Set of permissions the bot has in the channel the interaction was sent in
         this.appPermissions = new PermissionsBitField(BigInt(data.app_permissions)).freeze();
 
-        // The permissions of the member, if exists in a guild
-        this.memberPermissions = data.member?.permissions
-            ? new PermissionsBitField(BigInt(data.member.permissions)).freeze()
-            : undefined;
-            
         // The locale of the user who sent the interaction
         this.locale = data.locale;
 
@@ -101,11 +106,6 @@ class BaseInteraction extends Base {
     // The time the interaction was created at
     get createdAt() {
         return new Date(this.createdTimestamp);
-    }
-
-    // Indicates whether this interaction is received from a guild.
-    inGuild() {
-        return Boolean(this.guildId && this.member);
     }
 }
 

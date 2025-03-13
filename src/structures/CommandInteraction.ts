@@ -1,5 +1,3 @@
-'use strict';
-
 import {
 	APIApplicationCommandInteraction,
 	ApplicationCommandType,
@@ -14,9 +12,6 @@ import { Attachment } from './Attachment';
 import { BaseInteraction } from './BaseInteraction';
 import Client from '../client/client';
 import { User } from './User';
-import { Role } from './Role';
-import { GuildMember } from './GuildMember';
-import { PartialChannel } from './PartialChannel';
 
 // Represents an option of a received command interaction.
 type CommandInteractionOption = {
@@ -26,9 +21,9 @@ type CommandInteractionOption = {
 	value?: string;
 	options?: CommandInteractionOption[];
 	user?: User;
-	member?: GuildMember | APIGuildMember;
-	channel?: PartialChannel | APIChannel;
-	role?: Role | APIRole;
+	member?: APIGuildMember;
+	channel?: APIChannel;
+	role?: APIRole;
 	attachment?: Attachment;
 };
 
@@ -37,9 +32,6 @@ class CommandInteraction extends BaseInteraction {
 	commandName: string;
 	commandType: ApplicationCommandType;
 	commandGuildId?: string;
-	deferred: boolean;
-	replied: boolean;
-	ephemeral: boolean | null;
 
 	constructor(client: Client, data: APIApplicationCommandInteraction) {
 		super(client, data);
@@ -55,15 +47,6 @@ class CommandInteraction extends BaseInteraction {
 
 		// The id of the guild the invoked application command is registered to
 		this.commandGuildId = data.data.guild_id;
-
-		// Whether the reply to this interaction has been deferred
-		this.deferred = false;
-
-		// Whether this interaction has already been replied to
-		this.replied = false;
-
-		// Whether the reply to this interaction is ephemeral
-		this.ephemeral = null;
 
 		// An associated interaction webhook, can be used to further interact with this interaction
 		// this.webhook = new InteractionWebhook(this.client, this.applicationId, this.token);
@@ -98,19 +81,7 @@ class CommandInteraction extends BaseInteraction {
 
 		return result;
 	}
-
-	// These are here only for documentation purposes - they are implemented by InteractionResponses
-	/* eslint-disable no-empty-function */
-	deferReply() {}
-	reply() {}
-	fetchReply() {}
-	editReply() {}
-	deleteReply() {}
-	followUp() {}
-	showModal() {}
-	awaitModalSubmit() {}
 }
 
-//InteractionResponses.applyToClass(CommandInteraction, ['deferUpdate', 'update']);
 
 export { CommandInteraction };

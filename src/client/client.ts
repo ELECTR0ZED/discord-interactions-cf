@@ -4,6 +4,7 @@ import { assert } from "console";
 import { SlashCommandBuilder } from "../index";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
 import { registerCommands } from "../utils/registerCommands";
+import { CommandInteraction } from "../structures/CommandInteraction";
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
@@ -86,7 +87,7 @@ class Client {
                         // Handle chat input commands
                         const command = this.commands.get(interaction.data.name);
                         if (command) {
-                            return await command.execute(interaction);
+                            return await command.execute( new CommandInteraction(this, interaction) );
                         } else {
                             console.error('Unknown command:', interaction.data.name);
                         }

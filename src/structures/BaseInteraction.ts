@@ -3,7 +3,6 @@ import {
     APIBaseInteraction,
     InteractionType,
     APIEntitlement,
-    APIPartialInteractionGuild,
 } from 'discord-api-types/v10';
 import { PermissionsBitField } from 'discord.js';
 import { Base } from './Base';

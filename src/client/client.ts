@@ -12,7 +12,7 @@ class Client {
         return new REST(DefaultRestOptions);
     }
 
-    async addCommand(command: SlashCommandBuilder): Promise<void> {
+    addCommand(command: SlashCommandBuilder): void {
         if (typeof command.toJSON !== 'function') {
             throw new Error('Invalid command object. Ensure it is built using SlashCommandBuilder.');
         }

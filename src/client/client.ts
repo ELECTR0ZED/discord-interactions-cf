@@ -1,4 +1,4 @@
-import { APIInteraction, APIInteractionResponsePong, ApplicationCommandType, InteractionResponseType, InteractionType } from "discord-api-types/v10";
+import { APIInteraction, APIInteractionResponsePong, ApplicationCommandType, InteractionResponseType, InteractionType, APIInteractionResponse } from "discord-api-types/v10";
 import verifyKey from "../helpers/verifyKey";
 import { SlashCommandBuilder } from "../index";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
@@ -119,7 +119,7 @@ class Client {
         await registerCommands(commands, token, clientId);
     }
 
-    private respond(payload: any) {
+    private respond(payload: APIInteractionResponse) {
         return new Response(JSON.stringify(payload), {
             headers: {
                 'Content-Type': 'application/json',

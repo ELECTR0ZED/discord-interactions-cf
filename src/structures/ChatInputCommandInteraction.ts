@@ -1,7 +1,7 @@
 import {
     APIChatInputApplicationCommandInteraction,
 } from 'discord-api-types/v10';
-import { CommandInteraction, CommandInteractionOption } from './CommandInteraction';
+import { CommandInteraction } from './CommandInteraction';
 import Client from '../client/client';
 import { CommandInteractionOptionResolver } from './CommandInteractionOptionResolver';
 

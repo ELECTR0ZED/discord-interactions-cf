@@ -7,7 +7,7 @@ import { CommandInteractionOptionResolver } from './CommandInteractionOptionReso
 
 // Represents an option of a received chat input command interaction.
 class ChatInputCommandInteraction extends CommandInteraction {
-	options?: CommandInteractionOptionResolver;
+	options: CommandInteractionOptionResolver;
 
 	constructor(client: Client, data: APIChatInputApplicationCommandInteraction) {
 		super(client, data);

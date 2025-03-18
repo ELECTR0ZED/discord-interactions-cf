@@ -1,13 +1,13 @@
 import Client from './client/client';
 import { SlashCommandBuilder as OriginalSlashCommandBuilder } from '@discordjs/builders';
 import { registerCommands } from './utils/registerCommands';
-import { CommandInteraction } from './structures/CommandInteraction';
+import { ChatInputCommandInteraction } from './structures/ChatInputCommandInteraction';
 import { APIInteractionResponse } from 'discord-api-types/v10';
 
 class SlashCommandBuilder extends OriginalSlashCommandBuilder {
-    private executeFunction: ((interaction: CommandInteraction, env: Env) => Promise<void>) | null = null;
+    private executeFunction: ((interaction: ChatInputCommandInteraction, env: Env) => Promise<void>) | null = null;
 
-    setExecute(fn: (interaction: CommandInteraction, env: Env) => Promise<void>) {
+    setExecute(fn: (interaction: ChatInputCommandInteraction, env: Env) => Promise<void>) {
         if (fn.constructor.name !== 'AsyncFunction') {
             throw new Error('Execute function must be asynchronous');
         }
@@ -15,7 +15,7 @@ class SlashCommandBuilder extends OriginalSlashCommandBuilder {
         return this;
     }
 
-    async execute(interaction: CommandInteraction, env: Env): Promise<APIInteractionResponse> {
+    async execute(interaction: ChatInputCommandInteraction, env: Env): Promise<APIInteractionResponse> {
         if (this.executeFunction) {
             await this.executeFunction(interaction, env);
             if (!interaction.response) {

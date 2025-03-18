@@ -12,6 +12,7 @@ import { Attachment } from './Attachment';
 import { BaseInteraction } from './BaseInteraction';
 import Client from '../client/client';
 import { User } from './User';
+import { InteractionResponseCallback, InteractionResponseCallbackOptions } from './InteractionResponseCallback';
 
 // Represents an option of a received command interaction.
 type CommandInteractionOption = {
@@ -47,9 +48,6 @@ class CommandInteraction extends BaseInteraction {
 
 		// The id of the guild the invoked application command is registered to
 		this.commandGuildId = data.data.guild_id;
-
-		// An associated interaction webhook, can be used to further interact with this interaction
-		// this.webhook = new InteractionWebhook(this.client, this.applicationId, this.token);
 	}
 
 	// Transforms an option received from the API.
@@ -80,6 +78,12 @@ class CommandInteraction extends BaseInteraction {
 		}
 
 		return result;
+	}
+
+	reply(options: InteractionResponseCallbackOptions) {
+		const callback = new InteractionResponseCallback(options);
+
+		return callback;
 	}
 }
 

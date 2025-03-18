@@ -3,6 +3,9 @@ import {
     APIBaseInteraction,
     InteractionType,
     APIEntitlement,
+    InteractionResponseType,
+    Routes,
+    APIInteractionResponse,
 } from 'discord-api-types/v10';
 import { Base } from './Base';
 import Client from '../client/client';
@@ -10,6 +13,7 @@ import { PartialInteractionGuild } from './PartialInteractionGuild';
 import { PartialInteractionChannel } from './PartialInteractionChannel';
 import { InteractionGuildMember } from './InteractionGuildMember';
 import { User } from './User';
+import { InteractionResponseCallback, InteractionResponseCallbackOptions } from './InteractionResponseCallback';
 
 type APIBaseInteractionComplete = APIBaseInteraction<InteractionType, any>;
 
@@ -32,6 +36,7 @@ class BaseInteraction extends Base {
     entitlements: Map<APIEntitlement['id'], APIEntitlement>;
     authorizingIntegrationOwners: APIBaseInteractionComplete['authorizing_integration_owners'];
     context: APIBaseInteractionComplete['context'];
+	response: APIInteractionResponse | null;
 
     constructor(client: Client, data: APIBaseInteractionComplete) {
         super(client);
@@ -96,6 +101,8 @@ class BaseInteraction extends Base {
 
         // Context where the interaction was triggered from
         this.context = data.context;
+        
+		this.response = null;
     }
 
     //The timestamp the interaction was created at
@@ -106,6 +113,57 @@ class BaseInteraction extends Base {
     // The time the interaction was created at
     get createdAt() {
         return new Date(this.createdTimestamp);
+    }
+
+    async reply(options: InteractionResponseCallbackOptions) {
+		this.response = {
+			type: InteractionResponseType.ChannelMessageWithSource,
+			data: new InteractionResponseCallback(options).toJSON(),
+		}
+	}
+
+	async deferReply(options: InteractionResponseCallbackOptions) {
+		this.response = {
+			type: InteractionResponseType.DeferredChannelMessageWithSource,
+			data: new InteractionResponseCallback(options).toJSON(),
+		}
+	}
+
+	async followUp(options: InteractionResponseCallbackOptions) {
+		await this.client.rest.post(
+            Routes.webhook(this.applicationId, this.token),
+            {
+				body: new InteractionResponseCallback(options).toJSON(),
+			},
+        );
+	}
+
+	async editReply(options: InteractionResponseCallbackOptions) {
+		await this.client.rest.patch(
+			Routes.webhookMessage(this.applicationId, this.token, '@original'),
+			{
+				body: new InteractionResponseCallback(options).toJSON(),
+			},
+		);
+	}
+
+	async deleteReply() {
+		await this.client.rest.delete(
+			Routes.webhookMessage(this.applicationId, this.token, '@original'),
+		);
+	}
+
+    async deferUpdate() {
+        this.response = {
+            type: InteractionResponseType.DeferredMessageUpdate,
+        };
+    }
+
+    async update(options: InteractionResponseCallbackOptions) {
+        this.response = {
+            type: InteractionResponseType.UpdateMessage,
+            data: new InteractionResponseCallback(options).toJSON(),
+        };
     }
 }
 

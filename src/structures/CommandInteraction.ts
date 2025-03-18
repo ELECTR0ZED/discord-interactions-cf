@@ -7,13 +7,11 @@ import {
 	APIGuildMember,
 	APIChannel,
 	APIRole,
-	APIInteractionResponse,
 } from 'discord-api-types/v10';
 import { Attachment } from './Attachment';
 import { BaseInteraction } from './BaseInteraction';
 import Client from '../client/client';
 import { User } from './User';
-import { InteractionResponseCallback, InteractionResponseCallbackOptions } from './InteractionResponseCallback';
 
 // Represents an option of a received command interaction.
 type CommandInteractionOption = {
@@ -34,7 +32,6 @@ class CommandInteraction extends BaseInteraction {
 	commandName: string;
 	commandType: ApplicationCommandType;
 	commandGuildId?: string;
-	response: APIInteractionResponse | null;
 
 	constructor(client: Client, data: APIApplicationCommandInteraction) {
 		super(client, data);
@@ -51,7 +48,6 @@ class CommandInteraction extends BaseInteraction {
 		// The id of the guild the invoked application command is registered to
 		this.commandGuildId = data.data.guild_id;
 
-		this.response = null;
 	}
 
 	// Transforms an option received from the API.
@@ -82,13 +78,6 @@ class CommandInteraction extends BaseInteraction {
 		}
 
 		return result;
-	}
-
-	reply(options: InteractionResponseCallbackOptions): void {
-		this.response = {
-			type: 4,
-			data: new InteractionResponseCallback(options).toJSON(),
-		}
 	}
 }
 

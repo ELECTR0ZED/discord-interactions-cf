@@ -35,7 +35,7 @@ class Client {
 
     async fetch(
         request: Request,
-        env: { PUBLIC_KEY: string, TOKEN: string, CLIENT_ID: string },
+        env: Env,
         ctx: any,
     ) {
         const url = new URL(request.url);

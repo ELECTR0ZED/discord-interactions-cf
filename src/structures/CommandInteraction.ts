@@ -25,6 +25,7 @@ type CommandInteractionOption = {
 	channel?: APIChannel;
 	role?: APIRole;
 	attachment?: Attachment;
+	data?: APIApplicationCommandInteraction['data'];
 };
 
 class CommandInteraction extends BaseInteraction {

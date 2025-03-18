@@ -25,7 +25,6 @@ export type CommandInteractionOption = {
 	channel?: APIInteractionDataResolvedChannel;
 	role?: APIRole;
 	attachment?: Attachment;
-	data?: APIApplicationCommandInteraction['data'];
 	focused?: boolean;
 };
 

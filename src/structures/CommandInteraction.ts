@@ -34,6 +34,7 @@ class CommandInteraction extends BaseInteraction {
 	commandName: string;
 	commandType: ApplicationCommandType;
 	commandGuildId?: string;
+	response: APIInteractionResponse | null;
 
 	constructor(client: Client, data: APIApplicationCommandInteraction) {
 		super(client, data);
@@ -49,6 +50,8 @@ class CommandInteraction extends BaseInteraction {
 
 		// The id of the guild the invoked application command is registered to
 		this.commandGuildId = data.data.guild_id;
+
+		this.response = null;
 	}
 
 	// Transforms an option received from the API.
@@ -81,8 +84,8 @@ class CommandInteraction extends BaseInteraction {
 		return result;
 	}
 
-	reply(options: InteractionResponseCallbackOptions): APIInteractionResponse {
-		return {
+	reply(options: InteractionResponseCallbackOptions): void {
+		this.response = {
 			type: 4,
 			data: new InteractionResponseCallback(options).toJSON(),
 		}

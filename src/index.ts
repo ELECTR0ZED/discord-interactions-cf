@@ -18,7 +18,11 @@ class SlashCommandBuilder extends OriginalSlashCommandBuilder {
 
     async execute(interaction: CommandInteraction): Promise<APIInteractionResponse> {
         if (this.executeFunction) {
-            return await this.executeFunction(interaction);
+            await this.executeFunction(interaction);
+            if (!interaction.response) {
+                throw new Error('No response from slash command execute function');
+            }
+            return interaction.response;
         } else {
             throw new Error('No execute function set');
         }

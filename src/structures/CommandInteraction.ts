@@ -26,6 +26,7 @@ export type CommandInteractionOption = {
 	role?: APIRole;
 	attachment?: Attachment;
 	data?: APIApplicationCommandInteraction['data'];
+	focused?: boolean;
 };
 
 class CommandInteraction extends BaseInteraction {

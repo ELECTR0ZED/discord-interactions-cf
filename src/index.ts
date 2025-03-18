@@ -6,9 +6,9 @@ import { InteractionResponseCallback } from './structures/InteractionResponseCal
 import { APIInteractionResponse } from 'discord-api-types/v10';
 
 class SlashCommandBuilder extends OriginalSlashCommandBuilder {
-    private executeFunction: ((interaction: CommandInteraction) => Promise<APIInteractionResponse>) | null = null;
+    private executeFunction: ((interaction: CommandInteraction) => Promise<void>) | null = null;
 
-    setExecute(fn: (interaction: CommandInteraction) => Promise<APIInteractionResponse>) {
+    setExecute(fn: (interaction: CommandInteraction) => Promise<void>) {
         if (fn.constructor.name !== 'AsyncFunction') {
             throw new Error('Execute function must be asynchronous');
         }

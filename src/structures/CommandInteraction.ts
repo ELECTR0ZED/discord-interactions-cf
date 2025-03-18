@@ -80,10 +80,8 @@ class CommandInteraction extends BaseInteraction {
 		return result;
 	}
 
-	reply(options: InteractionResponseCallbackOptions) {
-		const callback = new InteractionResponseCallback(options);
-
-		return callback;
+	reply(options: InteractionResponseCallbackOptions): InteractionResponseCallback {
+		return new InteractionResponseCallback(options);
 	}
 }
 

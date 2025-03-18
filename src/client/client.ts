@@ -4,6 +4,7 @@ import { SlashCommandBuilder } from "../index";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
 import { registerCommands } from "../utils/registerCommands";
 import { CommandInteraction } from "../structures/CommandInteraction";
+import { InteractionResponseCallback } from "../structures/InteractionResponseCallback";
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
@@ -119,7 +120,7 @@ class Client {
         await registerCommands(commands, token, clientId);
     }
 
-    private respond(payload: APIInteractionResponse) {
+    private respond(payload: InteractionResponseCallback) {
         return new Response(JSON.stringify(payload), {
             headers: {
                 'Content-Type': 'application/json',

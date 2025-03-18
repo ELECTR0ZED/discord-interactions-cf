@@ -1,12 +1,13 @@
 import Client from './client/client';
 import { SlashCommandBuilder as OriginalSlashCommandBuilder } from '@discordjs/builders';
 import { registerCommands } from './utils/registerCommands';
-import { APIInteractionResponse } from 'discord-api-types/v10';
+import { CommandInteraction } from './structures/CommandInteraction';
+import { InteractionResponseCallback } from './structures/InteractionResponseCallback';
 
 class SlashCommandBuilder extends OriginalSlashCommandBuilder {
-    private executeFunction: ((interaction: any) => Promise<APIInteractionResponse>) | null = null;
+    private executeFunction: ((interaction: CommandInteraction) => Promise<InteractionResponseCallback>) | null = null;
 
-    setExecute(fn: (interaction: any) => Promise<APIInteractionResponse>) {
+    setExecute(fn: (interaction: CommandInteraction) => Promise<InteractionResponseCallback>) {
         if (fn.constructor.name !== 'AsyncFunction') {
             throw new Error('Execute function must be asynchronous');
         }
@@ -14,7 +15,7 @@ class SlashCommandBuilder extends OriginalSlashCommandBuilder {
         return this;
     }
 
-    async execute(interaction: any) {
+    async execute(interaction: CommandInteraction): Promise<InteractionResponseCallback> {
         if (this.executeFunction) {
             return await this.executeFunction(interaction);
         } else {

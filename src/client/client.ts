@@ -120,7 +120,7 @@ class Client {
         await registerCommands(commands, token, clientId);
     }
 
-    private respond(payload: InteractionResponseCallback) {
+    private respond(payload: APIInteractionResponse) {
         return new Response(JSON.stringify(payload), {
             headers: {
                 'Content-Type': 'application/json',

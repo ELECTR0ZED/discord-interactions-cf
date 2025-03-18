@@ -7,6 +7,7 @@ import {
 	APIGuildMember,
 	APIChannel,
 	APIRole,
+	APIInteractionResponse,
 } from 'discord-api-types/v10';
 import { Attachment } from './Attachment';
 import { BaseInteraction } from './BaseInteraction';
@@ -80,8 +81,11 @@ class CommandInteraction extends BaseInteraction {
 		return result;
 	}
 
-	reply(options: InteractionResponseCallbackOptions): InteractionResponseCallback {
-		return new InteractionResponseCallback(options);
+	reply(options: InteractionResponseCallbackOptions): APIInteractionResponse {
+		return {
+			type: 4,
+			data: new InteractionResponseCallback(options).toJSON(),
+		}
 	}
 }
 

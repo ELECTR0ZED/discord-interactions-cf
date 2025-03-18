@@ -2,7 +2,6 @@ import Client from './client/client';
 import { SlashCommandBuilder as OriginalSlashCommandBuilder } from '@discordjs/builders';
 import { registerCommands } from './utils/registerCommands';
 import { CommandInteraction } from './structures/CommandInteraction';
-import { InteractionResponseCallback } from './structures/InteractionResponseCallback';
 import { APIInteractionResponse } from 'discord-api-types/v10';
 
 class SlashCommandBuilder extends OriginalSlashCommandBuilder {

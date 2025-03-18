@@ -1,9 +1,17 @@
-import { APIInteraction, APIInteractionResponsePong, ApplicationCommandType, InteractionResponseType, InteractionType, APIInteractionResponse } from "discord-api-types/v10";
+import { 
+    APIInteraction,
+    APIInteractionResponsePong,
+    ApplicationCommandType,
+    InteractionResponseType,
+    InteractionType,
+    APIInteractionResponse,
+    APIChatInputApplicationCommandInteraction,
+} from "discord-api-types/v10";
 import verifyKey from "../helpers/verifyKey";
 import { SlashCommandBuilder } from "../index";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
 import { registerCommands } from "../utils/registerCommands";
-import { CommandInteraction } from "../structures/CommandInteraction";
+import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInteraction";
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
@@ -85,12 +93,14 @@ class Client {
             case InteractionType.ApplicationCommand:
                 switch (interaction.data.type) {
                     case ApplicationCommandType.ChatInput:
-                        // Handle chat input commands
-                        const command = this.commands.get(interaction.data.name);
+                        const chatInteraction = interaction as APIChatInputApplicationCommandInteraction;
+                        const command = this.commands.get(chatInteraction.data.name);
                         if (command) {
-                            return this.respond(await command.execute( new CommandInteraction(this, interaction), env ));
+                            return this.respond(
+                                await command.execute(new ChatInputCommandInteraction(this, chatInteraction), env)
+                            );
                         } else {
-                            console.error('Unknown command:', interaction.data.name);
+                            console.error('Unknown command:', chatInteraction.data.name);
                         }
                         break;
                     default:

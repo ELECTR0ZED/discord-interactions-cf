@@ -30,3 +30,16 @@ class SlashCommandBuilder extends OriginalSlashCommandBuilder {
 
 export * from '@discordjs/builders';
 export { SlashCommandBuilder, registerCommands, Client };
+
+// Structures
+export * from './structures/Attachment';
+export * from './structures/Base';
+export * from './structures/BaseInteraction';
+export * from './structures/ChatInputCommandInteraction';
+export * from './structures/CommandInteraction';
+export * from './structures/CommandInteractionOptionResolver';
+export * from './structures/InteractionGuildMember';
+export * from './structures/InteractionResponseCallback';
+export * from './structures/PartialInteractionChannel';
+export * from './structures/PartialInteractionGuild';
+export * from './structures/User';

@@ -14,11 +14,7 @@ import { registerCommands } from "../utils/registerCommands";
 import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInteraction";
 
 class Client {
-    commands: Map<string, SlashCommandBuilder>;
-
-    constructor() {
-        this.commands = new Map();
-    }
+    commands: Map<string, SlashCommandBuilder> = new Map();
 
     get rest() {
         return new REST(DefaultRestOptions);
@@ -138,6 +134,14 @@ class Client {
             headers: {
                 'Content-Type': 'application/json',
             },
+        });
+    }
+
+    // Optional: A fire() method to register a global fetch event listener,
+    // similar to Hono's implementation. Useful in non-ES module environments.
+    fire(): void {
+        addEventListener("fetch", (event: any): void => {
+            event.respondWith(this.fetch(event.request, {} as Env, event));
         });
     }
 }

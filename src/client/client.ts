@@ -140,14 +140,6 @@ class Client {
             },
         });
     }
-
-    // Optional: A fire() method to register a global fetch event listener,
-    // similar to Hono's implementation. Useful in non-ES module environments.
-    fire(): void {
-        addEventListener("fetch", (event: any): void => {
-            event.respondWith(this.fetch(event.request, {} as Env, event));
-        });
-    }
 }
 
 export default Client;

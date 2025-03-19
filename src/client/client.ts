@@ -16,6 +16,10 @@ import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInter
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
 
+    constructor() {
+        this.fetch = this.fetch.bind(this);
+    }
+
     get rest() {
         return new REST(DefaultRestOptions);
     }

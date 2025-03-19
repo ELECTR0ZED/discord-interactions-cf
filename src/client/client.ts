@@ -81,6 +81,12 @@ class Client {
         // Parse the interaction
         const interaction = JSON.parse(body) as APIInteraction;
 
+        if (interaction.application_id !== env.CLIENT_ID) {
+            return new Response('Invalid application ID', {
+                status: 401,
+            });
+        }
+
         // If the interaction is a ping, respond with a pong
         if (interaction.type === InteractionType.Ping) {
             const response: APIInteractionResponsePong = {

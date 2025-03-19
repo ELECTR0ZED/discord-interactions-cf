@@ -14,7 +14,11 @@ import { registerCommands } from "../utils/registerCommands";
 import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInteraction";
 
 class Client {
-    commands: Map<string, SlashCommandBuilder> = new Map();
+    commands: Map<string, SlashCommandBuilder>;
+
+    constructor() {
+        this.commands = new Map();
+    }
 
     get rest() {
         return new REST(DefaultRestOptions);

@@ -108,21 +108,21 @@ class CommandInteractionOptionResolver {
     }
 
     // Gets a string option.
-    getString(name: string, required: boolean = false) {
+    getString(name: string, required: boolean = false): string|null {
         const option = this._getTypedOption(name, [ApplicationCommandOptionType.String], ['value'], required);
-        return option?.value ?? null;
+        return option?.value as string ?? null;
     }
 
     // Gets an integer option.
-    getInteger(name: string, required: boolean = false) {
+    getInteger(name: string, required: boolean = false): number|null {
         const option = this._getTypedOption(name, [ApplicationCommandOptionType.Integer], ['value'], required);
-        return option?.value ?? null;
+        return option?.value as number ?? null;
     }
 
     // Gets a number option.
-    getNumber(name: string, required: boolean = false) {
+    getNumber(name: string, required: boolean = false): number|null {
         const option = this._getTypedOption(name, [ApplicationCommandOptionType.Number], ['value'], required);
-        return option?.value ?? null;
+        return option?.value as number ?? null;
     }
 
     // Gets a user option.

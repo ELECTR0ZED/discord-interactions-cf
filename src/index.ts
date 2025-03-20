@@ -30,6 +30,7 @@ class SlashCommandBuilder extends OriginalSlashCommandBuilder {
 
 export * from '@discordjs/builders';
 export { SlashCommandBuilder, registerCommands, Client };
+export * from 'discord-api-types/v10';
 
 // Structures
 export * from './structures/Attachment';

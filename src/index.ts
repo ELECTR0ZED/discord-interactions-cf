@@ -5,7 +5,7 @@ import { ChatInputCommandInteraction } from './structures/ChatInputCommandIntera
 import { MessageComponentInteraction } from './structures/MessageComponentInteraction';
 import { APIInteractionResponse } from 'discord-api-types/v10';
 
-type SlashCommandBuilderExecuteFunction = (interaction: ChatInputCommandInteraction, env: Env) => Promise<APIInteractionResponse>;
+type SlashCommandBuilderExecuteFunction = (interaction: ChatInputCommandInteraction, env: Env) => Promise<void>;
 
 class SlashCommandBuilder extends OriginalSlashCommandBuilder {
     private executeFunction: SlashCommandBuilderExecuteFunction | null = null;
@@ -31,7 +31,7 @@ class SlashCommandBuilder extends OriginalSlashCommandBuilder {
     }
 }
 
-type SlashCommandComponentBuilderExecuteFunction = (interaction: MessageComponentInteraction, env: Env, data?: string[]) => Promise<APIInteractionResponse>;
+type SlashCommandComponentBuilderExecuteFunction = (interaction: MessageComponentInteraction, env: Env, data?: string[]) => Promise<void>;
 
 class SlashCommandComponentBuilder {
     customId!: string;

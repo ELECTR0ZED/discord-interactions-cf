@@ -150,11 +150,17 @@ class Client {
                 const customIdData = componentInteraction.data.custom_id.split(this.componentCustomIdDelimiter).slice(1);
                 const component = this.components.get(customId);
                 if (component) {
+                    const msgComponentInteraction = new MessageComponentInteraction(this, componentInteraction)
+                    if (component.authorOnly && msgComponentInteraction.user.id !== msgComponentInteraction.message.interactionMetadata?.user.id) {
+                        return new Response('Unauthorized', {
+                            status: 401,
+                        });
+                    }
                     return this.respond(
-                        await component.execute(new MessageComponentInteraction(this, componentInteraction), env, customIdData)
+                        await component.execute(msgComponentInteraction, env, customIdData)
                     );
                 } else {
-                    console.error('Unknown component:', componentInteraction.data.custom_id);
+                    console.error('Unknown component:', customId);
                 }
                 break;
             case InteractionType.ApplicationCommandAutocomplete:

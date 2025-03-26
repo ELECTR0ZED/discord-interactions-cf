@@ -35,6 +35,7 @@ type SlashCommandComponentBuilderExecuteFunction = (interaction: MessageComponen
 
 class SlashCommandComponentBuilder {
     customId!: string;
+    authorOnly = true;
     private executeFunction!: SlashCommandComponentBuilderExecuteFunction;
 
     setExecute(fn: SlashCommandComponentBuilderExecuteFunction) {
@@ -59,6 +60,11 @@ class SlashCommandComponentBuilder {
 
     setCustomId(customId: string) {
         this.customId = customId;
+        return this;
+    }
+
+    setAuthorOnly(authorOnly: boolean) {
+        this.authorOnly = authorOnly;
         return this;
     }
 }

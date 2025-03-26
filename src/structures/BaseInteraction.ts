@@ -27,7 +27,7 @@ class BaseInteraction extends Base {
     guildId: APIBaseInteractionComplete['guild_id'];
     channel?: PartialInteractionChannel;
     member?: InteractionGuildMember;
-    user?: User;
+    user: User;
     readonly token: APIBaseInteractionComplete['token'];
     version: APIBaseInteractionComplete['version'];
     message?: Message;
@@ -69,9 +69,11 @@ class BaseInteraction extends Base {
         }
 
         // The user that sent the interaction
-        if (data.user || data.member?.user) {
-            this.user = new User(this.client, data.user ?? data.member?.user!);
+        const userData = data.user ?? data.member?.user;
+        if (!userData) {
+            throw new Error('User data is missing in the interaction payload. This should not happen.');
         }
+        this.user = new User(this.client, userData);
 
         // The token of the interaction
         this.token = data.token;

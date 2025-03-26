@@ -18,8 +18,13 @@ import { MessageComponentInteraction } from "../structures/MessageComponentInter
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
     components: Map<string, SlashCommandComponentBuilder> = new Map();
+    componentCustomIdDelimiter = ':';
 
-    constructor() {
+    constructor(componentCustomIdDelimiter?: string) {
+        if (componentCustomIdDelimiter) {
+            this.componentCustomIdDelimiter = componentCustomIdDelimiter;
+        }
+
         this.fetch = this.fetch.bind(this);
     }
 
@@ -141,10 +146,12 @@ class Client {
             case InteractionType.MessageComponent:
                 // Handle message components
                 const componentInteraction = interaction as APIMessageComponentInteraction;
-                const component = this.components.get(componentInteraction.data.custom_id);
+                const customId = componentInteraction.data.custom_id.split(this.componentCustomIdDelimiter)[0];
+                const customIdData = componentInteraction.data.custom_id.split(this.componentCustomIdDelimiter).slice(1);
+                const component = this.components.get(customId);
                 if (component) {
                     return this.respond(
-                        await component.execute(new MessageComponentInteraction(this, componentInteraction), env)
+                        await component.execute(new MessageComponentInteraction(this, componentInteraction), env, customIdData)
                     );
                 } else {
                     console.error('Unknown component:', componentInteraction.data.custom_id);

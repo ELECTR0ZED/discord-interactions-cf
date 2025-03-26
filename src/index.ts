@@ -29,11 +29,13 @@ class SlashCommandBuilder extends OriginalSlashCommandBuilder {
     }
 }
 
+type SlashCommandComponentBuilderExecuteFunction = (interaction: MessageComponentInteraction, env: Env, data?: string[]) => Promise<void>;
+
 class SlashCommandComponentBuilder {
     customId!: string;
-    private executeFunction!: ((interaction: MessageComponentInteraction, env: Env) => Promise<void>);
+    private executeFunction!: SlashCommandComponentBuilderExecuteFunction;
 
-    setExecute(fn: (interaction: MessageComponentInteraction, env: Env) => Promise<void>) {
+    setExecute(fn: SlashCommandComponentBuilderExecuteFunction) {
         if (fn.constructor.name !== 'AsyncFunction') {
             throw new Error('Execute function must be asynchronous');
         }
@@ -41,9 +43,9 @@ class SlashCommandComponentBuilder {
         return this;
     }
 
-    async execute(interaction: MessageComponentInteraction, env: Env): Promise<APIInteractionResponse> {
+    async execute(interaction: MessageComponentInteraction, env: Env, data: string[]): Promise<APIInteractionResponse> {
         if (this.executeFunction) {
-            await this.executeFunction(interaction, env);
+            await this.executeFunction(interaction, env, data);
             if (!interaction.response) {
                 throw new Error('No response from slash command component execute function');
             }

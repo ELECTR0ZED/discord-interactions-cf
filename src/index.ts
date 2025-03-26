@@ -5,7 +5,7 @@ import { ChatInputCommandInteraction } from './structures/ChatInputCommandIntera
 import { MessageComponentInteraction } from './structures/MessageComponentInteraction';
 import { APIInteractionResponse } from 'discord-api-types/v10';
 
-type SlashCommandBuilderExecuteFunction = (interaction: ChatInputCommandInteraction, env: Env) => Promise<APIInteractionResponse|void>;
+type SlashCommandBuilderExecuteFunction = (interaction: ChatInputCommandInteraction, env: Env) => Promise<APIInteractionResponse>;
 
 class SlashCommandBuilder extends OriginalSlashCommandBuilder {
     private executeFunction: SlashCommandBuilderExecuteFunction | null = null;
@@ -18,17 +18,20 @@ class SlashCommandBuilder extends OriginalSlashCommandBuilder {
         return this;
     }
 
-    async execute(interaction: ChatInputCommandInteraction, env: Env): Promise<APIInteractionResponse|void> {
+    async execute(interaction: ChatInputCommandInteraction, env: Env): Promise<APIInteractionResponse> {
         if (this.executeFunction) {
             await this.executeFunction(interaction, env);
-            if (interaction.response) return interaction.response;
+            if (!interaction.response) {
+                throw new Error('No response from slash command execute function');
+            }
+            return interaction.response;
         } else {
             throw new Error('No execute function set');
         }
     }
 }
 
-type SlashCommandComponentBuilderExecuteFunction = (interaction: MessageComponentInteraction, env: Env, data?: string[]) => Promise<APIInteractionResponse|void>;
+type SlashCommandComponentBuilderExecuteFunction = (interaction: MessageComponentInteraction, env: Env, data?: string[]) => Promise<APIInteractionResponse>;
 
 class SlashCommandComponentBuilder {
     customId!: string;
@@ -42,10 +45,13 @@ class SlashCommandComponentBuilder {
         return this;
     }
 
-    async execute(interaction: MessageComponentInteraction, env: Env, data: string[]): Promise<APIInteractionResponse|void> {
+    async execute(interaction: MessageComponentInteraction, env: Env, data: string[]): Promise<APIInteractionResponse> {
         if (this.executeFunction) {
             await this.executeFunction(interaction, env, data);
-            if (interaction.response) return interaction.response;
+            if (!interaction.response) {
+                throw new Error('No response from slash command component execute function');
+            }
+            return interaction.response;
         } else {
             throw new Error('No execute function set');
         }

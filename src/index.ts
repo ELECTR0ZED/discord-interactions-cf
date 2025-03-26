@@ -2,6 +2,7 @@ import Client from './client/client';
 import { SlashCommandBuilder as OriginalSlashCommandBuilder } from '@discordjs/builders';
 import { registerCommands } from './utils/registerCommands';
 import { ChatInputCommandInteraction } from './structures/ChatInputCommandInteraction';
+import { MessageComponentInteraction } from './structures/MessageComponentInteraction';
 import { APIInteractionResponse } from 'discord-api-types/v10';
 
 class SlashCommandBuilder extends OriginalSlashCommandBuilder {
@@ -28,8 +29,38 @@ class SlashCommandBuilder extends OriginalSlashCommandBuilder {
     }
 }
 
+class SlashCommandComponentBuilder {
+    customId!: string;
+    private executeFunction!: ((interaction: MessageComponentInteraction, env: Env) => Promise<void>);
+
+    setExecute(fn: (interaction: MessageComponentInteraction, env: Env) => Promise<void>) {
+        if (fn.constructor.name !== 'AsyncFunction') {
+            throw new Error('Execute function must be asynchronous');
+        }
+        this.executeFunction = fn;
+        return this;
+    }
+
+    async execute(interaction: MessageComponentInteraction, env: Env): Promise<APIInteractionResponse> {
+        if (this.executeFunction) {
+            await this.executeFunction(interaction, env);
+            if (!interaction.response) {
+                throw new Error('No response from slash command component execute function');
+            }
+            return interaction.response;
+        } else {
+            throw new Error('No execute function set');
+        }
+    }
+
+    setCustomId(customId: string) {
+        this.customId = customId;
+        return this;
+    }
+}
+
 export * from '@discordjs/builders';
-export { SlashCommandBuilder, registerCommands, Client };
+export { SlashCommandBuilder, SlashCommandComponentBuilder, registerCommands, Client };
 export * from 'discord-api-types/v10';
 
 // Structures

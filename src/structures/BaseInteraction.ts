@@ -14,6 +14,7 @@ import { PartialInteractionChannel } from './PartialInteractionChannel';
 import { InteractionGuildMember } from './InteractionGuildMember';
 import { User } from './User';
 import { InteractionResponseCallback, InteractionResponseCallbackOptions } from './InteractionResponseCallback';
+import { Message } from './Message';
 
 type APIBaseInteractionComplete = APIBaseInteraction<InteractionType, any>;
 
@@ -29,7 +30,7 @@ class BaseInteraction extends Base {
     user?: User;
     readonly token: APIBaseInteractionComplete['token'];
     version: APIBaseInteractionComplete['version'];
-    message: APIBaseInteractionComplete['message'];
+    message?: Message;
     appPermissions: APIBaseInteractionComplete['app_permissions'];
     locale: APIBaseInteractionComplete['locale'];
     guildLocale: APIBaseInteractionComplete['guild_locale'];
@@ -79,7 +80,7 @@ class BaseInteraction extends Base {
         this.version = data.version;
 
         // For components, the message they were attached to
-        this.message = data.message;
+        this.message = data.message ? new Message(this.client, data.message) : undefined;
 
         // Set of permissions the bot has in the channel the interaction was sent in
         this.appPermissions = data.app_permissions;

@@ -6,15 +6,18 @@ import {
     InteractionType,
     APIInteractionResponse,
     APIChatInputApplicationCommandInteraction,
+    APIMessageComponentInteraction,
 } from "discord-api-types/v10";
 import verifyKey from "../helpers/verifyKey";
-import { SlashCommandBuilder } from "../index";
+import { SlashCommandBuilder, SlashCommandComponentBuilder } from "../index";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
 import { registerCommands } from "../utils/registerCommands";
 import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInteraction";
+import { MessageComponentInteraction } from "../structures/MessageComponentInteraction";
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
+    components: Map<string, SlashCommandComponentBuilder> = new Map();
 
     constructor() {
         this.fetch = this.fetch.bind(this);
@@ -24,7 +27,7 @@ class Client {
         return new REST(DefaultRestOptions);
     }
 
-    addCommand(command: SlashCommandBuilder): void {
+    addCommand(command: SlashCommandBuilder) {
         if (typeof command.toJSON !== 'function') {
             throw new Error('Invalid command object. Ensure it is built using SlashCommandBuilder.');
         }
@@ -43,6 +46,23 @@ class Client {
         }
 
         this.commands.set(command.name, command);
+
+        return this;
+    }
+
+    addComponent(component: SlashCommandComponentBuilder) {
+
+        if (!component.customId) {
+            throw new Error('Component must have a custom id.');
+        }
+
+        if (this.components.has(component.customId)) {
+            throw new Error(`Component with custom id "${component.customId}" already exists.`);
+        }
+
+        this.components.set(component.customId, component);
+
+        return this;
     }
 
     async fetch(
@@ -120,6 +140,15 @@ class Client {
                 break;
             case InteractionType.MessageComponent:
                 // Handle message components
+                const componentInteraction = interaction as APIMessageComponentInteraction;
+                const component = this.components.get(componentInteraction.data.custom_id);
+                if (component) {
+                    return this.respond(
+                        await component.execute(new MessageComponentInteraction(this, componentInteraction), env)
+                    );
+                } else {
+                    console.error('Unknown component:', componentInteraction.data.custom_id);
+                }
                 break;
             case InteractionType.ApplicationCommandAutocomplete:
                 // Handle application command autocomplete
@@ -139,7 +168,9 @@ class Client {
         await registerCommands(commands, token, clientId);
     }
 
-    private respond(payload: APIInteractionResponse) {
+    private respond(payload: APIInteractionResponse|undefined) {
+        if (!payload) return
+
         return new Response(JSON.stringify(payload), {
             headers: {
                 'Content-Type': 'application/json',

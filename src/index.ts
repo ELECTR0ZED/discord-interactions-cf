@@ -5,10 +5,12 @@ import { ChatInputCommandInteraction } from './structures/ChatInputCommandIntera
 import { MessageComponentInteraction } from './structures/MessageComponentInteraction';
 import { APIInteractionResponse } from 'discord-api-types/v10';
 
-class SlashCommandBuilder extends OriginalSlashCommandBuilder {
-    private executeFunction: ((interaction: ChatInputCommandInteraction, env: Env) => Promise<void>) | null = null;
+type SlashCommandBuilderExecuteFunction = (interaction: ChatInputCommandInteraction, env: Env) => Promise<void>;
 
-    setExecute(fn: (interaction: ChatInputCommandInteraction, env: Env) => Promise<void>) {
+class SlashCommandBuilder extends OriginalSlashCommandBuilder {
+    private executeFunction: SlashCommandBuilderExecuteFunction | null = null;
+
+    setExecute(fn: SlashCommandBuilderExecuteFunction) {
         if (fn.constructor.name !== 'AsyncFunction') {
             throw new Error('Execute function must be asynchronous');
         }

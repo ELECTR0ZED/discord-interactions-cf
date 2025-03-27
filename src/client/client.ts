@@ -12,9 +12,11 @@ import {
 import verifyKey from "../helpers/verifyKey";
 import { SlashCommandBuilder, SlashCommandComponentBuilder, SlashCommandSubcommandBuilder } from "../index";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
+import { SlashCommandSubcommandGroupBuilder } from '@discordjs/builders'
 import { registerCommands } from "../utils/registerCommands";
 import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInteraction";
 import { MessageComponentInteraction } from "../structures/MessageComponentInteraction";
+import { getSubcommandCommand } from "../helpers/command";
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
@@ -129,32 +131,35 @@ class Client {
             case InteractionType.ApplicationCommand:
                 switch (interaction.data.type) {
                     case ApplicationCommandType.ChatInput:
-                        const chatInteraction = new ChatInputCommandInteraction(this, interaction as APIChatInputApplicationCommandInteraction);
+                        const chatInteraction = new ChatInputCommandInteraction(
+                            this,
+                            interaction as APIChatInputApplicationCommandInteraction
+                        );
                         const command = this.commands.get(chatInteraction.data.name);
-                        if (command) {
-                            const subcommand = chatInteraction.options.getSubcommand();
-                            if (subcommand) {
-                                const subcommandCommand = command.options.find(
-                                    option => 
-                                        option.toJSON().type === ApplicationCommandOptionType.Subcommand && 
-                                        option.toJSON().name === subcommand
-                                    ) as SlashCommandSubcommandBuilder | undefined;
-                                if (!subcommandCommand) {
-                                    console.error('Unknown subcommand:', subcommand);
-                                    break;
-                                }
-                                return this.respond(
-                                    await subcommandCommand.execute(chatInteraction, env)
-                                );
-                            } else {
-                                return this.respond(
-                                    await command.execute(chatInteraction, env)
-                                );
-                            }
-                        } else {
+                        if (!command) {
                             console.error('Unknown command:', chatInteraction.data.name);
+                            break;
                         }
-                        break;
+                        
+                        const subcommandGroup = chatInteraction.options.getSubcommandGroup();
+                        const subcommand = chatInteraction.options.getSubcommand();
+                        
+                        if (subcommand) {
+                            const subcommandCommand = getSubcommandCommand(command, subcommandGroup, subcommand);
+                            if (!subcommandCommand) {
+                                console.error(
+                                    subcommandGroup
+                                    ? `Unknown subcommand group "${subcommandGroup}" or subcommand "${subcommand}"`
+                                    : `Unknown subcommand: ${subcommand}`
+                                );
+                                break;
+                            }
+                            // Execute subcommand
+                            return this.respond(await subcommandCommand.execute(chatInteraction, env));
+                        }
+
+                        // Execute top level command
+                        return this.respond(await command.execute(chatInteraction, env));
                     default:
                         console.error('Unknown command type:', interaction.data.type);
                         break;

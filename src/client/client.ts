@@ -7,9 +7,10 @@ import {
     APIInteractionResponse,
     APIChatInputApplicationCommandInteraction,
     APIMessageComponentInteraction,
+    ApplicationCommandOptionType,
 } from "discord-api-types/v10";
 import verifyKey from "../helpers/verifyKey";
-import { SlashCommandBuilder, SlashCommandComponentBuilder } from "../index";
+import { SlashCommandBuilder, SlashCommandComponentBuilder, SlashCommandSubcommandBuilder } from "../index";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
 import { registerCommands } from "../utils/registerCommands";
 import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInteraction";
@@ -128,12 +129,28 @@ class Client {
             case InteractionType.ApplicationCommand:
                 switch (interaction.data.type) {
                     case ApplicationCommandType.ChatInput:
-                        const chatInteraction = interaction as APIChatInputApplicationCommandInteraction;
+                        const chatInteraction = new ChatInputCommandInteraction(this, interaction as APIChatInputApplicationCommandInteraction);
                         const command = this.commands.get(chatInteraction.data.name);
                         if (command) {
-                            return this.respond(
-                                await command.execute(new ChatInputCommandInteraction(this, chatInteraction), env)
-                            );
+                            const subcommand = chatInteraction.options.getSubcommand();
+                            if (subcommand) {
+                                const subcommandCommand = command.options.find(
+                                    option => 
+                                        option.toJSON().type === ApplicationCommandOptionType.Subcommand && 
+                                        option.toJSON().name === subcommand
+                                    ) as SlashCommandSubcommandBuilder | undefined;
+                                if (!subcommandCommand) {
+                                    console.error('Unknown subcommand:', subcommand);
+                                    break;
+                                }
+                                return this.respond(
+                                    await subcommandCommand.execute(chatInteraction, env)
+                                );
+                            } else {
+                                return this.respond(
+                                    await command.execute(chatInteraction, env)
+                                );
+                            }
                         } else {
                             console.error('Unknown command:', chatInteraction.data.name);
                         }

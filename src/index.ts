@@ -1,5 +1,5 @@
 import Client from './client/client';
-import { SlashCommandBuilder as OriginalSlashCommandBuilder } from '@discordjs/builders';
+import { SlashCommandBuilder as OriginalSlashCommandBuilder, SlashCommandSubcommandBuilder } from '@discordjs/builders';
 import { registerCommands } from './utils/registerCommands';
 import { ChatInputCommandInteraction } from './structures/ChatInputCommandInteraction';
 import { MessageComponentInteraction } from './structures/MessageComponentInteraction';
@@ -68,6 +68,37 @@ class SlashCommandComponentBuilder {
         return this;
     }
 }
+
+declare module '@discordjs/builders' {
+    interface SlashCommandSubcommandBuilder {
+        executeFunction: SlashCommandBuilderExecuteFunction
+        setExecute(fn: SlashCommandBuilderExecuteFunction): this;
+        execute(interaction: ChatInputCommandInteraction, env: Env): Promise<APIInteractionResponse>;
+    }
+}
+
+SlashCommandSubcommandBuilder.prototype.setExecute = function (fn: SlashCommandBuilderExecuteFunction) {
+    if (fn.constructor.name !== 'AsyncFunction') {
+        throw new Error('Execute function must be asynchronous');
+    }
+    this.executeFunction = fn;
+    return this;
+};
+
+SlashCommandSubcommandBuilder.prototype.execute = async function (
+    interaction: ChatInputCommandInteraction,
+    env: Env
+): Promise<APIInteractionResponse> {
+    if (this.executeFunction) {
+        await this.executeFunction(interaction, env);
+        if (!interaction.response) {
+            throw new Error('No response from slash command execute function');
+        }
+        return interaction.response;
+    } else {
+        throw new Error('No execute function set');
+    }
+};
 
 export * from '@discordjs/builders';
 export { SlashCommandBuilder, SlashCommandComponentBuilder, registerCommands, Client };

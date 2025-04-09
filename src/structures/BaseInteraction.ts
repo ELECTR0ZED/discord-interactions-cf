@@ -197,6 +197,10 @@ class BaseInteraction extends Base {
 			type: option.type,
 		} as CommandInteractionOption;
 
+        if ('focused' in option && option.focused) {
+            result.focused = option.focused;
+        }
+
 		if ('value' in option) result.value = option.value as CommandInteractionOption['value'];
 		if ('options' in option && option.options) result.options = option.options.map(opt => this.transformOption(opt, resolved));
 

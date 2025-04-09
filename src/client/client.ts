@@ -7,16 +7,16 @@ import {
     APIInteractionResponse,
     APIChatInputApplicationCommandInteraction,
     APIMessageComponentInteraction,
-    ApplicationCommandOptionType,
+    APIApplicationCommandAutocompleteInteraction,
 } from "discord-api-types/v10";
 import verifyKey from "../helpers/verifyKey";
-import { SlashCommandBuilder, SlashCommandComponentBuilder, SlashCommandSubcommandBuilder } from "../index";
+import { SlashCommandBuilder, SlashCommandComponentBuilder } from "../index";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
-import { SlashCommandSubcommandGroupBuilder } from '@discordjs/builders'
 import { registerCommands } from "../utils/registerCommands";
 import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInteraction";
 import { MessageComponentInteraction } from "../structures/MessageComponentInteraction";
 import { getSubcommandCommand } from "../helpers/command";
+import { AutocompleteInteraction } from "../structures/AutocompleteInteraction";
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
@@ -186,7 +186,19 @@ class Client {
                 }
                 break;
             case InteractionType.ApplicationCommandAutocomplete:
-                // Handle application command autocomplete
+                const autocompleteInteraction = new AutocompleteInteraction(
+                    this,
+                    interaction as APIApplicationCommandAutocompleteInteraction
+                );
+
+                const focusedOption = autocompleteInteraction.options.getFocused();
+                if (!focusedOption) {
+                    console.error('No focused option:', autocompleteInteraction.data.name);
+                    break;
+                }
+                const focusedOptionName = focusedOption.name;
+                const focusedOptionValue = focusedOption.value;
+
                 break;
             case InteractionType.ModalSubmit:
                 // Handle modal submits

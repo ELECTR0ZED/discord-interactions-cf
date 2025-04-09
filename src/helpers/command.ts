@@ -13,7 +13,7 @@ export function getSubcommandCommand(
         const groupCommand = command.options.find(option => {
             const data = option.toJSON();
             return (
-                data.type === ApplicationCommandOptionType.SubcommandGroup &&
+                (data.type as ApplicationCommandOptionType) === ApplicationCommandOptionType.SubcommandGroup &&
                 data.name === subcommandGroup
             );
         }) as SlashCommandSubcommandGroupBuilder | undefined;
@@ -29,7 +29,7 @@ export function getSubcommandCommand(
         return command.options.find(option => {
             const data = option.toJSON();
             return (
-                data.type === ApplicationCommandOptionType.Subcommand &&
+                (data.type as ApplicationCommandOptionType) === ApplicationCommandOptionType.Subcommand &&
                 data.name === subcommand
             );
         }) as SlashCommandSubcommandBuilder | undefined;

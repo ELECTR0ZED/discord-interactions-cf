@@ -1,6 +1,9 @@
 import {
     APIApplicationCommandAutocompleteInteraction,
 	ApplicationCommandType,
+	InteractionResponseType,
+	APIApplicationCommandAutocompleteResponse,
+	APIApplicationCommandOptionChoice,
 } from 'discord-api-types/v10';
 import { BaseInteraction } from './BaseInteraction';
 import Client from '../client/client';
@@ -30,6 +33,15 @@ class AutocompleteInteraction extends BaseInteraction {
 
         // The options of the command
 		this.options = new CommandInteractionOptionResolver((data.data.options ?? []).map(option => this.transformOption(option, data.data.resolved)), data.data.resolved);
+	}
+
+	async respond(choices: APIApplicationCommandOptionChoice[]) {
+		this.response = {
+			type: InteractionResponseType.ApplicationCommandAutocompleteResult,
+			data: {
+				choices: choices
+			}
+		} as APIApplicationCommandAutocompleteResponse
 	}
 }
 

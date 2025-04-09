@@ -10,7 +10,7 @@ import {
     APIApplicationCommandAutocompleteInteraction,
 } from "discord-api-types/v10";
 import verifyKey from "../helpers/verifyKey";
-import { SlashCommandBuilder, SlashCommandComponentBuilder } from "../index";
+import { SlashCommandBuilder, SlashCommandComponentBuilder, ApplicationCommandOptionBaseExtended } from "../index";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
 import { registerCommands } from "../utils/registerCommands";
 import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInteraction";
@@ -192,12 +192,43 @@ class Client {
                 );
 
                 const focusedOption = autocompleteInteraction.options.getFocused();
-                if (!focusedOption) {
-                    console.error('No focused option:', autocompleteInteraction.data.name);
+                const focusedOptionName = focusedOption.name;
+                const focusedOptionValue = focusedOption.value as string;
+
+                const commandAutocomplete = this.commands.get(autocompleteInteraction.commandName);
+                if (!commandAutocomplete) {
+                    console.error('Unknown command:', autocompleteInteraction.commandName);
                     break;
                 }
-                const focusedOptionName = focusedOption.name;
-                const focusedOptionValue = focusedOption.value;
+                const subcommandGroup = autocompleteInteraction.options.getSubcommandGroup();
+                const subcommand = autocompleteInteraction.options.getSubcommand();
+                let option: ApplicationCommandOptionBaseExtended | undefined;
+                if (subcommand) {
+                    const subcommandCommand = getSubcommandCommand(commandAutocomplete, subcommandGroup, subcommand);
+                    if (!subcommandCommand) {
+                        console.error(
+                            subcommandGroup
+                            ? `Unknown subcommand group "${subcommandGroup}" or subcommand "${subcommand}"`
+                            : `Unknown subcommand: ${subcommand}`
+                        );
+                        break;
+                    }
+                    option = subcommandCommand.options.find(o => o.name === focusedOptionName);
+                } else {
+                    option = commandAutocomplete.options.find(o => o.name === focusedOptionName);
+                }
+                if (!option) {
+                    console.error('Unknown option:', focusedOptionName);
+                    break;
+                }
+                
+                if (option && typeof option.execute === 'function') {
+                    return this.respond(
+                        await option.execute(autocompleteInteraction, focusedOptionValue, env)
+                    );
+                } else {
+                    console.error('Option does not have an execute function:', focusedOptionName);
+                }
 
                 break;
             case InteractionType.ModalSubmit:

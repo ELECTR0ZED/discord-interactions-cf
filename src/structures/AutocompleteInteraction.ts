@@ -39,7 +39,7 @@ class AutocompleteInteraction extends BaseInteraction {
 		this.response = {
 			type: InteractionResponseType.ApplicationCommandAutocompleteResult,
 			data: {
-				choices: choices
+				choices: choices.slice(0, 25)
 			}
 		} as APIApplicationCommandAutocompleteResponse
 	}

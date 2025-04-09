@@ -1,10 +1,45 @@
 import Client from './client/client';
-import { SlashCommandBuilder as OriginalSlashCommandBuilder, SlashCommandSubcommandBuilder, ApplicationCommandOptionWithAutocompleteMixin  } from '@discordjs/builders';
+import { ApplicationCommandOptionWithAutocompleteMixin } from '@discordjs/builders';
 import { registerCommands } from './utils/registerCommands';
 import { ChatInputCommandInteraction } from './structures/ChatInputCommandInteraction';
 import { MessageComponentInteraction } from './structures/MessageComponentInteraction';
 import { APIInteractionResponse } from 'discord-api-types/v10';
 import { AutocompleteInteraction } from './structures/AutocompleteInteraction';
+
+type ApplicationCommandOptionWithAutocompleteMixinExecuteFunction = (interaction: AutocompleteInteraction, value: string, env: Env) => Promise<void>;
+
+declare module '@discordjs/builders' {
+    interface ApplicationCommandOptionWithAutocompleteMixin {
+        executeFunction: ApplicationCommandOptionWithAutocompleteMixinExecuteFunction
+        setExecute(fn: ApplicationCommandOptionWithAutocompleteMixinExecuteFunction): this;
+        execute(interaction: AutocompleteInteraction, value: string, env: Env): Promise<APIInteractionResponse>;
+    }
+}
+
+ApplicationCommandOptionWithAutocompleteMixin.prototype.setExecute = function (fn: ApplicationCommandOptionWithAutocompleteMixinExecuteFunction) {
+    if (fn.constructor.name !== 'AsyncFunction') {
+        throw new Error('Execute function must be asynchronous');
+    }
+    this.executeFunction = fn;
+    return this;
+};
+ApplicationCommandOptionWithAutocompleteMixin.prototype.execute = async function (
+    interaction: AutocompleteInteraction,
+    value: string,
+    env: Env
+): Promise<APIInteractionResponse> {
+    if (this.executeFunction) {
+        await this.executeFunction(interaction, value, env);
+        if (!interaction.response) {
+            throw new Error('No response from slash command autocomplete execute function');
+        }
+        return interaction.response;
+    } else {
+        throw new Error('No execute function set');
+    }
+}
+
+import { SlashCommandBuilder as OriginalSlashCommandBuilder, SlashCommandSubcommandBuilder  } from '@discordjs/builders';
 
 type SlashCommandBuilderExecuteFunction = (interaction: ChatInputCommandInteraction, env: Env) => Promise<void>;
 
@@ -70,19 +105,11 @@ class SlashCommandComponentBuilder {
     }
 }
 
-type ApplicationCommandOptionWithAutocompleteMixinExecuteFunction = (interaction: AutocompleteInteraction, value: string, env: Env) => Promise<void>;
-
 declare module '@discordjs/builders' {
     interface SlashCommandSubcommandBuilder {
         executeFunction: SlashCommandBuilderExecuteFunction
         setExecute(fn: SlashCommandBuilderExecuteFunction): this;
         execute(interaction: ChatInputCommandInteraction, env: Env): Promise<APIInteractionResponse>;
-    }
-
-    interface ApplicationCommandOptionWithAutocompleteMixin {
-        executeFunction: ApplicationCommandOptionWithAutocompleteMixinExecuteFunction
-        setExecute(fn: ApplicationCommandOptionWithAutocompleteMixinExecuteFunction): this;
-        execute(interaction: AutocompleteInteraction, value: string, env: Env): Promise<APIInteractionResponse>;
     }
 }
 
@@ -107,29 +134,6 @@ SlashCommandSubcommandBuilder.prototype.execute = async function (
         throw new Error('No execute function set');
     }
 };
-
-ApplicationCommandOptionWithAutocompleteMixin.prototype.setExecute = function (fn: ApplicationCommandOptionWithAutocompleteMixinExecuteFunction) {
-    if (fn.constructor.name !== 'AsyncFunction') {
-        throw new Error('Execute function must be asynchronous');
-    }
-    this.executeFunction = fn;
-    return this;
-};
-ApplicationCommandOptionWithAutocompleteMixin.prototype.execute = async function (
-    interaction: AutocompleteInteraction,
-    value: string,
-    env: Env
-): Promise<APIInteractionResponse> {
-    if (this.executeFunction) {
-        await this.executeFunction(interaction, value, env);
-        if (!interaction.response) {
-            throw new Error('No response from slash command autocomplete execute function');
-        }
-        return interaction.response;
-    } else {
-        throw new Error('No execute function set');
-    }
-}
 
 export * from '@discordjs/builders';
 export { SlashCommandBuilder, SlashCommandComponentBuilder, registerCommands, Client };

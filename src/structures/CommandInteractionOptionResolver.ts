@@ -3,7 +3,7 @@ import {
     APIInteractionDataResolved,
     ChannelType,
  } from 'discord-api-types/v10';
-import { CommandInteractionOption } from './CommandInteraction';
+import { CommandInteractionOption } from './BaseInteraction';
 
 // A resolver for command interaction options.
 class CommandInteractionOptionResolver {

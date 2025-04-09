@@ -6,6 +6,11 @@ import {
     InteractionResponseType,
     Routes,
     APIInteractionResponse,
+    ApplicationCommandOptionType,
+    APIInteractionDataResolvedChannel,
+    APIRole,
+    APIApplicationCommandInteractionDataOption,
+    APIInteractionDataResolved,
 } from 'discord-api-types/v10';
 import { Base } from './Base';
 import Client from '../client/client';
@@ -15,6 +20,22 @@ import { InteractionGuildMember } from './InteractionGuildMember';
 import { User } from './User';
 import { InteractionResponseCallback, InteractionResponseCallbackOptions } from './InteractionResponseCallback';
 import { Message } from './Message';
+import { Attachment } from './Attachment';
+
+// Represents an option of a received command interaction.
+export type CommandInteractionOption = {
+	name: string;
+	type: ApplicationCommandOptionType;
+	autocomplete?: boolean;
+	value?: string | number | boolean;
+	options?: CommandInteractionOption[];
+	user?: User;
+	member?: InteractionGuildMember;
+	channel?: APIInteractionDataResolvedChannel;
+	role?: APIRole;
+	attachment?: Attachment;
+	focused?: boolean;
+};
 
 type APIBaseInteractionComplete = APIBaseInteraction<InteractionType, any>;
 
@@ -168,6 +189,44 @@ class BaseInteraction extends Base {
             data: new InteractionResponseCallback(options).toJSON(),
         };
     }
+
+    // Transforms an option received from the API.
+	transformOption(option: APIApplicationCommandInteractionDataOption, resolved?: APIInteractionDataResolved) {
+		const result = {
+			name: option.name,
+			type: option.type,
+		} as CommandInteractionOption;
+
+		if ('value' in option) result.value = option.value as CommandInteractionOption['value'];
+		if ('options' in option && option.options) result.options = option.options.map(opt => this.transformOption(opt, resolved));
+
+		if (resolved && 'value' in option && typeof option.value === 'string') {
+			const user = resolved.users?.[option.value];
+			if (user) result.user = new User(this.client, user);
+
+			const member = resolved.members?.[option.value];
+			if (member && this.guild && user) {
+				const fullMember = { 
+					...member, 
+					user: user, 
+					deaf: false, 
+					mute: false,
+				};
+				result.member = new InteractionGuildMember(this.client, fullMember, this.guild);
+			}
+
+			const channel = resolved.channels?.[option.value];
+			if (channel) result.channel = channel; // new PartialInteractionChannel(this.client, channel);
+
+			const role = resolved.roles?.[option.value];
+			if (role) result.role = role; // new Role(this.client, role);
+
+			const attachment = resolved.attachments?.[option.value];
+			if (attachment) result.attachment = new Attachment(attachment);
+		}
+
+		return result;
+	}
 }
 
 export { BaseInteraction };

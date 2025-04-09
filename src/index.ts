@@ -84,7 +84,6 @@ SlashCommandSubcommandBuilder.prototype.setExecute = function (fn: SlashCommandB
     this.executeFunction = fn;
     return this;
 };
-
 SlashCommandSubcommandBuilder.prototype.execute = async function (
     interaction: ChatInputCommandInteraction,
     env: Env
@@ -109,7 +108,6 @@ export * from './structures/Attachment';
 export * from './structures/Base';
 export * from './structures/BaseInteraction';
 export * from './structures/ChatInputCommandInteraction';
-export * from './structures/CommandInteraction';
 export * from './structures/CommandInteractionOptionResolver';
 export * from './structures/InteractionGuildMember';
 export * from './structures/InteractionResponseCallback';

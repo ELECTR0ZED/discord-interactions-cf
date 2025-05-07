@@ -82,6 +82,11 @@ class Client {
 
         if (url.pathname === '/register') {
             const authHeader = request.headers.get('Authorization');
+            if (!env.TOKEN) {
+                return new Response('Command registering not configured', {
+                    status: 500,
+                });
+            }
             if (!authHeader || authHeader !== `Bearer ${env.TOKEN}`) {
                 return new Response('Unauthorized', {
                     status: 401,

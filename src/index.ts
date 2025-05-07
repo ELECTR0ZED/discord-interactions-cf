@@ -1,5 +1,10 @@
 import Client from './client/client';
-import { SlashCommandBuilder as OriginalSlashCommandBuilder, SlashCommandSubcommandBuilder, SlashCommandStringOption, ApplicationCommandOptionBase } from '@discordjs/builders';
+import { 
+    SlashCommandBuilder as OriginalSlashCommandBuilder,
+    SlashCommandSubcommandBuilder,
+    SlashCommandStringOption,
+    ApplicationCommandOptionBase,
+} from '@discordjs/builders';
 import { registerCommands } from './utils/registerCommands';
 import { ChatInputCommandInteraction } from './structures/ChatInputCommandInteraction';
 import { MessageComponentInteraction } from './structures/MessageComponentInteraction';

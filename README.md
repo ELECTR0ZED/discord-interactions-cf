@@ -33,13 +33,13 @@ The public URL of your deployed Cloudflare Worker **is the URL you give to Disco
 
 To register commands, make a `GET` or `POST` request to:
 
-```
+```plaintext
 <your-worker-url>/register
 ```
 
 with the following header:
 
-```
+```plaintext
 Authorization: Bearer <your-bot-token>
 ```
 

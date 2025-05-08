@@ -142,7 +142,7 @@ class SlashCommandComponentBuilder {
 }
 
 export * from '@discordjs/builders';
-export { SlashCommandBuilder, SlashCommandComponentBuilder, registerCommands, Client };
+export { SlashCommandBuilder, SlashCommandComponentBuilder, registerCommands, Client, AutocompleteInteraction };
 export * from 'discord-api-types/v10';
 
 // Structures

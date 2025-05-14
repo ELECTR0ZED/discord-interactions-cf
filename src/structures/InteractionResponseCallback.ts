@@ -1,4 +1,4 @@
-import { APIInteractionResponseCallbackData, MessageFlags  } from 'discord-api-types/v10';
+import { APIInteractionResponseCallbackData  } from 'discord-api-types/v10';
 
 export interface InteractionResponseCallbackOptions {
     tts?: boolean;
@@ -9,7 +9,6 @@ export interface InteractionResponseCallbackOptions {
     components?: any[];
     attachments?: any;
     poll?: any;
-    ephemeral?: boolean;
 }
 
 // Represents a message to be sent to the API.
@@ -21,10 +20,6 @@ class InteractionResponseCallback {
     }
 
     toJSON(): APIInteractionResponseCallbackData {
-        if (this.options.ephemeral) {
-            this.options.flags = MessageFlags.Ephemeral;
-        }
-
         return {
             tts: this.options.tts ?? false,
             content: this.options.content ?? '',

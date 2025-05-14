@@ -25,7 +25,7 @@ class InteractionResponseCallback {
             content: this.options.content ?? '',
             embeds: this.options.embeds ?? [],
             // allowed_mentions,
-            // flags,
+            flags: this.options.flags ?? 0,
             components: this.options.components ?? [],
             // attachments: this.options.attachments,
             // poll,

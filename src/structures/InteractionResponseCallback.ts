@@ -1,11 +1,11 @@
-import { APIInteractionResponseCallbackData  } from 'discord-api-types/v10';
+import { APIInteractionResponseCallbackData, MessageFlags } from 'discord-api-types/v10';
 
 export interface InteractionResponseCallbackOptions {
     tts?: boolean;
     content?: string;
     embeds?: any[];
     allowedMentions?: any;
-    flags?: number;
+    flags?: MessageFlags[];
     components?: any[];
     attachments?: any;
     poll?: any;
@@ -25,7 +25,7 @@ class InteractionResponseCallback {
             content: this.options.content ?? '',
             embeds: this.options.embeds ?? [],
             // allowed_mentions,
-            flags: this.options.flags ?? 0,
+            flags: this.options.flags?.reduce<number>((acc, flag) => acc | flag, 0) ?? 0,
             components: this.options.components ?? [],
             // attachments: this.options.attachments,
             // poll,

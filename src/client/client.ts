@@ -21,7 +21,7 @@ import { AutocompleteInteraction } from "../structures/AutocompleteInteraction";
 type Hook = (
   interaction: ChatInputCommandInteraction | MessageComponentInteraction,
   env: Env
-) => Promise<boolean> | boolean;
+) => Promise<any> | any;
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();

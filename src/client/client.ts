@@ -10,7 +10,7 @@ import {
     APIApplicationCommandAutocompleteInteraction,
 } from "discord-api-types/v10";
 import verifyKey from "../helpers/verifyKey";
-import { SlashCommandBuilder, SlashCommandComponentBuilder, ApplicationCommandOptionBaseExtended } from "../index";
+import { SlashCommandBuilder, SlashCommandComponentBuilder, ApplicationCommandOptionBaseExtended, SlashCommandSubcommandBuilder } from "../index";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
 import { registerCommands } from "../utils/registerCommands";
 import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInteraction";
@@ -18,10 +18,17 @@ import { MessageComponentInteraction } from "../structures/MessageComponentInter
 import { getSubcommandCommand } from "../helpers/command";
 import { AutocompleteInteraction } from "../structures/AutocompleteInteraction";
 
+type Hook = (
+  interaction: ChatInputCommandInteraction | MessageComponentInteraction,
+  env: Env
+) => Promise<boolean> | boolean;
+
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
     components: Map<string, SlashCommandComponentBuilder> = new Map();
     componentCustomIdDelimiter = ':';
+    private beforeHooks: Hook[] = [];
+    private afterHooks: Hook[] = [];
 
     constructor(componentCustomIdDelimiter?: string) {
         if (componentCustomIdDelimiter) {
@@ -71,6 +78,34 @@ class Client {
         this.components.set(component.customId, component);
 
         return this;
+    }
+
+    addBeforeHook(fn: Hook) {
+        this.beforeHooks.push(fn);
+        return this;
+    }
+
+    addAfterHook(fn: Hook) {
+        this.afterHooks.push(fn);
+        return this;
+    }
+
+    /**
+     * Run an array of hooks in sequence.  
+     * → If any returns (or resolves to) false, stop and return false.  
+     * → Otherwise return true.
+     */
+    private async runHooks(
+        hooks: Hook[],
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction,
+        env: Env
+    ): Promise<boolean> {
+        for (const hook of hooks) {
+            const result = await Promise.resolve(hook(interaction, env));
+            if (result === false) return false;
+        }
+
+        return true;
     }
 
     async fetch(
@@ -145,9 +180,20 @@ class Client {
                             console.error('Unknown command:', chatInteraction.data.name);
                             break;
                         }
+
+                        const beforeResult = await this.runHooks(this.beforeHooks, chatInteraction, env);
+                        if (!beforeResult) {
+                            if (chatInteraction.response) {
+                                return this.respond(chatInteraction.response);
+                            }
+
+                            return new Response(null, { status: 200 });
+                        }
                         
                         const subcommandGroup = chatInteraction.options.getSubcommandGroup();
                         const subcommand = chatInteraction.options.getSubcommand();
+
+                        let commandToExecute: SlashCommandBuilder | SlashCommandSubcommandBuilder = command;
                         
                         if (subcommand) {
                             const subcommandCommand = getSubcommandCommand(command, subcommandGroup, subcommand);
@@ -159,12 +205,24 @@ class Client {
                                 );
                                 break;
                             }
-                            // Execute subcommand
-                            return this.respond(await subcommandCommand.execute(chatInteraction, env));
+                            
+                            commandToExecute = subcommandCommand;
                         }
 
-                        // Execute top level command
-                        return this.respond(await command.execute(chatInteraction, env));
+                        // Execute command
+                        await commandToExecute.execute(chatInteraction, env)
+
+                        const afterResult = await this.runHooks(this.afterHooks, chatInteraction, env);
+                        if (!afterResult) {
+                            if (chatInteraction.response) {
+                                return this.respond(chatInteraction.response);
+                            }
+
+                            return new Response(null, { status: 200 });
+                        }
+
+
+                        return this.respond(chatInteraction.response);
                     default:
                         console.error('Unknown command type:', interaction.data.type);
                         break;
@@ -183,9 +241,28 @@ class Client {
                             status: 401,
                         });
                     }
-                    return this.respond(
-                        await component.execute(msgComponentInteraction, env, customIdData)
-                    );
+
+                    const beforeResult = await this.runHooks(this.beforeHooks, msgComponentInteraction, env);
+                    if (!beforeResult) {
+                        if (msgComponentInteraction.response) {
+                            return this.respond(msgComponentInteraction.response);
+                        }
+
+                        return new Response(null, { status: 200 });
+                    }
+
+                    await component.execute(msgComponentInteraction, env, customIdData)
+
+                    const afterResult = await this.runHooks(this.afterHooks, msgComponentInteraction, env);
+                    if (!afterResult) {
+                        if (msgComponentInteraction.response) {
+                            return this.respond(msgComponentInteraction.response);
+                        }
+
+                        return new Response(null, { status: 200 });
+                    }
+
+                    return this.respond(msgComponentInteraction.response);
                 } else {
                     console.error('Unknown component:', customId);
                 }
@@ -251,8 +328,8 @@ class Client {
         await registerCommands(commands, token, clientId);
     }
 
-    private respond(payload: APIInteractionResponse|undefined) {
-        if (!payload) return
+    private respond(payload: APIInteractionResponse|null|undefined) {
+        if (!payload) return new Response(null, { status: 200 });
 
         return new Response(JSON.stringify(payload), {
             headers: {

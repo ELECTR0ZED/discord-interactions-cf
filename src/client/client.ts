@@ -239,9 +239,28 @@ class Client {
                             status: 401,
                         });
                     }
-                    return this.respond(
-                        await component.execute(msgComponentInteraction, env, customIdData)
-                    );
+
+                    const beforeResult = await this.runHooks(this.beforeHooks, msgComponentInteraction);
+                    if (!beforeResult) {
+                        if (msgComponentInteraction.response) {
+                            return this.respond(msgComponentInteraction.response);
+                        }
+
+                        return new Response(null, { status: 200 });
+                    }
+
+                    await component.execute(msgComponentInteraction, env, customIdData)
+
+                    const afterResult = await this.runHooks(this.afterHooks, msgComponentInteraction);
+                    if (!afterResult) {
+                        if (msgComponentInteraction.response) {
+                            return this.respond(msgComponentInteraction.response);
+                        }
+
+                        return new Response(null, { status: 200 });
+                    }
+
+                    return this.respond(msgComponentInteraction.response);
                 } else {
                     console.error('Unknown component:', customId);
                 }

@@ -19,7 +19,8 @@ import { getSubcommandCommand } from "../helpers/command";
 import { AutocompleteInteraction } from "../structures/AutocompleteInteraction";
 
 type Hook = (
-  interaction: ChatInputCommandInteraction | MessageComponentInteraction
+  interaction: ChatInputCommandInteraction | MessageComponentInteraction,
+  env: Env
 ) => Promise<boolean> | boolean;
 
 class Client {
@@ -96,10 +97,11 @@ class Client {
      */
     private async runHooks(
         hooks: Hook[],
-        interaction: ChatInputCommandInteraction | MessageComponentInteraction
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction,
+        env: Env
     ): Promise<boolean> {
         for (const hook of hooks) {
-            const result = await Promise.resolve(hook(interaction));
+            const result = await Promise.resolve(hook(interaction, env));
             if (result === false) return false;
         }
 
@@ -179,7 +181,7 @@ class Client {
                             break;
                         }
 
-                        const beforeResult = await this.runHooks(this.beforeHooks, chatInteraction);
+                        const beforeResult = await this.runHooks(this.beforeHooks, chatInteraction, env);
                         if (!beforeResult) {
                             if (chatInteraction.response) {
                                 return this.respond(chatInteraction.response);
@@ -210,7 +212,7 @@ class Client {
                         // Execute command
                         await commandToExecute.execute(chatInteraction, env)
 
-                        const afterResult = await this.runHooks(this.afterHooks, chatInteraction);
+                        const afterResult = await this.runHooks(this.afterHooks, chatInteraction, env);
                         if (!afterResult) {
                             if (chatInteraction.response) {
                                 return this.respond(chatInteraction.response);
@@ -240,7 +242,7 @@ class Client {
                         });
                     }
 
-                    const beforeResult = await this.runHooks(this.beforeHooks, msgComponentInteraction);
+                    const beforeResult = await this.runHooks(this.beforeHooks, msgComponentInteraction, env);
                     if (!beforeResult) {
                         if (msgComponentInteraction.response) {
                             return this.respond(msgComponentInteraction.response);
@@ -251,7 +253,7 @@ class Client {
 
                     await component.execute(msgComponentInteraction, env, customIdData)
 
-                    const afterResult = await this.runHooks(this.afterHooks, msgComponentInteraction);
+                    const afterResult = await this.runHooks(this.afterHooks, msgComponentInteraction, env);
                     if (!afterResult) {
                         if (msgComponentInteraction.response) {
                             return this.respond(msgComponentInteraction.response);

@@ -24,7 +24,7 @@ class ModalSubmitInteraction extends BaseInteraction {
 
         this.customId = data.data.custom_id;
 
-        this.components = data.data.components?.map(component => ModalSubmitInteraction.transformComponent(component)) as ActionRowModalData[];
+        this.components = (data.data.components?.map(component => ModalSubmitInteraction.transformComponent(component)) ?? []) as ActionRowModalData[];
 
         this.fields = new ModalSubmitFields(this.components);
     }

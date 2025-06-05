@@ -21,6 +21,7 @@ import { User } from './User';
 import { InteractionResponseCallback, InteractionResponseCallbackOptions } from './InteractionResponseCallback';
 import { Message } from './Message';
 import { Attachment } from './Attachment';
+import { ModalBuilder } from '@discordjs/builders';
 
 // Represents an option of a received command interaction.
 export type CommandInteractionOption = {
@@ -187,6 +188,13 @@ class BaseInteraction extends Base {
         this.response = {
             type: InteractionResponseType.UpdateMessage,
             data: new InteractionResponseCallback(options).toJSON(),
+        };
+    }
+
+    async showModal(modal: ModalBuilder) {
+        this.response = {
+            type: InteractionResponseType.Modal,
+            data: modal.toJSON(),
         };
     }
 

@@ -17,7 +17,7 @@ class ModalSubmitFields {
         }, new Map());
     }
 
-    getField(customId: string, type: ComponentType): ModalData | null {
+    getField(customId: string, type: ComponentType|undefined): ModalData | null {
         const field = this.fields.get(customId);
         if (!field) return null;
 

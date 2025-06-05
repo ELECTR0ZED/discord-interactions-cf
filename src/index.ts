@@ -147,12 +147,15 @@ export * from 'discord-api-types/v10';
 
 // Structures
 export * from './structures/Attachment';
+export * from './structures/AutocompleteInteraction';
 export * from './structures/Base';
 export * from './structures/BaseInteraction';
 export * from './structures/ChatInputCommandInteraction';
 export * from './structures/CommandInteractionOptionResolver';
 export * from './structures/InteractionGuildMember';
 export * from './structures/InteractionResponseCallback';
+export * from './structures/Message';
+export * from './structures/MessageComponentInteraction';
 export * from './structures/PartialInteractionChannel';
 export * from './structures/PartialInteractionGuild';
 export * from './structures/User';

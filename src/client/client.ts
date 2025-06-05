@@ -8,9 +8,10 @@ import {
     APIChatInputApplicationCommandInteraction,
     APIMessageComponentInteraction,
     APIApplicationCommandAutocompleteInteraction,
+    APIModalSubmitInteraction,
 } from "discord-api-types/v10";
 import verifyKey from "../helpers/verifyKey";
-import { SlashCommandBuilder, SlashCommandComponentBuilder, ApplicationCommandOptionBaseExtended, SlashCommandSubcommandBuilder } from "../index";
+import { SlashCommandBuilder, SlashCommandComponentBuilder, ApplicationCommandOptionBaseExtended, SlashCommandSubcommandBuilder, ModalSubmitInteraction, SlashCommandModalBuilder } from "../index";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
 import { registerCommands } from "../utils/registerCommands";
 import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInteraction";
@@ -19,24 +20,27 @@ import { getSubcommandCommand } from "../helpers/command";
 import { AutocompleteInteraction } from "../structures/AutocompleteInteraction";
 
 type Hook = (
-    interaction: ChatInputCommandInteraction | MessageComponentInteraction,
+    interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction,
     env: Env,
 ) => Promise<any> | any;
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
     components: Map<string, SlashCommandComponentBuilder> = new Map();
-    componentCustomIdDelimiter = ':';
+    modals: Map<string, SlashCommandModalBuilder> = new Map();
+    customIdDelimiter = ':';
     private beforeAllHooks: Hook[] = [];
     private afterAllHooks: Hook[] = [];
     private beforeCommandHooks: Hook[] = [];
     private afterCommandHooks: Hook[] = [];
     private beforeComponentHooks: Hook[] = [];
     private afterComponentHooks: Hook[] = [];
+    private beforeModalHooks: Hook[] = [];
+    private afterModalHooks: Hook[] = [];
 
-    constructor(componentCustomIdDelimiter?: string) {
-        if (componentCustomIdDelimiter) {
-            this.componentCustomIdDelimiter = componentCustomIdDelimiter;
+    constructor(customIdDelimiter?: string) {
+        if (customIdDelimiter) {
+            this.customIdDelimiter = customIdDelimiter;
         }
 
         this.fetch = this.fetch.bind(this);
@@ -84,6 +88,21 @@ class Client {
         return this;
     }
 
+    addModal(modal: SlashCommandModalBuilder) {
+
+        if (!modal.customId) {
+            throw new Error('Modal must have a custom id.');
+        }
+
+        if (this.modals.has(modal.customId)) {
+            throw new Error(`Modal with custom id "${modal.customId}" already exists.`);
+        }
+
+        this.modals.set(modal.customId, modal);
+
+        return this;
+    }
+
     addBeforeAllHook(fn: Hook) {
         this.beforeAllHooks.push(fn);
         return this;
@@ -111,6 +130,15 @@ class Client {
         return this;
     }
 
+    addBeforeModalHook(fn: Hook) {
+        this.beforeModalHooks.push(fn);
+        return this;
+    }
+    addAfterModalHook(fn: Hook) {
+        this.afterModalHooks.push(fn);
+        return this;
+    }
+
     /**
      * Run an array of hooks in sequence.  
      * → If any returns (or resolves to) false, stop and return false.  
@@ -118,7 +146,7 @@ class Client {
      */
     private async runHooks(
         hooks: Hook[],
-        interaction: ChatInputCommandInteraction | MessageComponentInteraction,
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction,
         env: Env,
     ): Promise<boolean> {
         for (const hook of hooks) {
@@ -252,8 +280,8 @@ class Client {
             case InteractionType.MessageComponent:
                 // Handle message components
                 const componentInteraction = interaction as APIMessageComponentInteraction;
-                const customId = componentInteraction.data.custom_id.split(this.componentCustomIdDelimiter)[0];
-                const customIdData = componentInteraction.data.custom_id.split(this.componentCustomIdDelimiter).slice(1);
+                const customId = componentInteraction.data.custom_id.split(this.customIdDelimiter)[0];
+                const customIdData = componentInteraction.data.custom_id.split(this.customIdDelimiter).slice(1);
                 const component = this.components.get(customId);
                 if (component) {
                     const msgComponentInteraction = new MessageComponentInteraction(this, componentInteraction)
@@ -335,7 +363,39 @@ class Client {
 
                 break;
             case InteractionType.ModalSubmit:
-                // Handle modal submits
+                const modalInteraction = new ModalSubmitInteraction(
+                    this,
+                    interaction as APIModalSubmitInteraction,
+                );
+
+                const modalCustomId = modalInteraction.customId.split(this.customIdDelimiter)[0];
+                const modalCustomIdData = modalInteraction.customId.split(this.customIdDelimiter).slice(1);
+                const modal = this.modals.get(modalCustomId);
+                if (modal) {
+                    const beforeResult = await this.runHooks([...this.beforeAllHooks, ...this.beforeModalHooks], modalInteraction, env);
+                    if (!beforeResult) {
+                        if (modalInteraction.response) {
+                            return this.respond(modalInteraction.response);
+                        }
+
+                        return new Response(null, { status: 200 });
+                    }
+
+                    await modal.execute(modalInteraction, env, modalCustomIdData)
+
+                    const afterResult = await this.runHooks([...this.afterAllHooks, ...this.afterModalHooks], modalInteraction, env);
+                    if (!afterResult) {
+                        if (modalInteraction.response) {
+                            return this.respond(modalInteraction.response);
+                        }
+
+                        return new Response(null, { status: 200 });
+                    }
+
+                    return this.respond(modalInteraction.response);
+                } else {
+                    console.error('Unknown modal:', modalCustomId);
+                }
                 break;
             default:
                 console.error('Unknown interaction type:', (interaction as APIInteraction).type);

@@ -10,6 +10,7 @@ import { ChatInputCommandInteraction } from './structures/ChatInputCommandIntera
 import { MessageComponentInteraction } from './structures/MessageComponentInteraction';
 import { APIInteractionResponse } from 'discord-api-types/v10';
 import { AutocompleteInteraction } from './structures/AutocompleteInteraction';
+import { ModalSubmitInteraction } from './structures/ModalSubmitInteraction';
 
 declare module '@discordjs/builders' {
     interface SlashCommandSubcommandBuilder {
@@ -141,8 +142,40 @@ class SlashCommandComponentBuilder {
     }
 }
 
+type SlashCommandModalBuilderExecuteFunction = (interaction: ModalSubmitInteraction, env: Env, data?: string[]) => Promise<void>;
+
+class SlashCommandModalBuilder {
+    customId!: string;
+    private executeFunction!: SlashCommandModalBuilderExecuteFunction;
+
+    setExecute(fn: SlashCommandModalBuilderExecuteFunction) {
+        if (fn.constructor.name !== 'AsyncFunction') {
+            throw new Error('Execute function must be asynchronous');
+        }
+        this.executeFunction = fn;
+        return this;
+    }
+
+    async execute(interaction: ModalSubmitInteraction, env: Env, data: string[]): Promise<APIInteractionResponse> {
+        if (this.executeFunction) {
+            await this.executeFunction(interaction, env, data);
+            if (!interaction.response) {
+                throw new Error('No response from slash command modal execute function');
+            }
+            return interaction.response;
+        } else {
+            throw new Error('No execute function set');
+        }
+    }
+
+    setCustomId(customId: string) {
+        this.customId = customId;
+        return this;
+    }
+}
+
 export * from '@discordjs/builders';
-export { SlashCommandBuilder, SlashCommandComponentBuilder, registerCommands, Client, AutocompleteInteraction };
+export { SlashCommandBuilder, SlashCommandComponentBuilder, SlashCommandModalBuilder, registerCommands, Client, AutocompleteInteraction };
 export * from 'discord-api-types/v10';
 
 // Structures
@@ -156,6 +189,7 @@ export * from './structures/InteractionGuildMember';
 export * from './structures/InteractionResponseCallback';
 export * from './structures/Message';
 export * from './structures/MessageComponentInteraction';
+export * from './structures/ModalSubmitInteraction';
 export * from './structures/PartialInteractionChannel';
 export * from './structures/PartialInteractionGuild';
 export * from './structures/User';

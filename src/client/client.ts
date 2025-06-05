@@ -19,16 +19,20 @@ import { getSubcommandCommand } from "../helpers/command";
 import { AutocompleteInteraction } from "../structures/AutocompleteInteraction";
 
 type Hook = (
-  interaction: ChatInputCommandInteraction | MessageComponentInteraction,
-  env: Env
+    interaction: ChatInputCommandInteraction | MessageComponentInteraction,
+    env: Env,
 ) => Promise<any> | any;
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
     components: Map<string, SlashCommandComponentBuilder> = new Map();
     componentCustomIdDelimiter = ':';
-    private beforeHooks: Hook[] = [];
-    private afterHooks: Hook[] = [];
+    private beforeAllHooks: Hook[] = [];
+    private afterAllHooks: Hook[] = [];
+    private beforeCommandHooks: Hook[] = [];
+    private afterCommandHooks: Hook[] = [];
+    private beforeComponentHooks: Hook[] = [];
+    private afterComponentHooks: Hook[] = [];
 
     constructor(componentCustomIdDelimiter?: string) {
         if (componentCustomIdDelimiter) {
@@ -80,13 +84,30 @@ class Client {
         return this;
     }
 
-    addBeforeHook(fn: Hook) {
-        this.beforeHooks.push(fn);
+    addBeforeAllHook(fn: Hook) {
+        this.beforeAllHooks.push(fn);
+        return this;
+    }
+    addAfterAllHook(fn: Hook) {
+        this.afterAllHooks.push(fn);
         return this;
     }
 
-    addAfterHook(fn: Hook) {
-        this.afterHooks.push(fn);
+    addBeforeCommandHook(fn: Hook) {
+        this.beforeCommandHooks.push(fn);
+        return this;
+    }
+    addAfterCommandHook(fn: Hook) {
+        this.afterCommandHooks.push(fn);
+        return this;
+    }
+
+    addBeforeComponentHook(fn: Hook) {
+        this.beforeComponentHooks.push(fn);
+        return this;
+    }
+    addAfterComponentHook(fn: Hook) {
+        this.afterComponentHooks.push(fn);
         return this;
     }
 
@@ -98,7 +119,7 @@ class Client {
     private async runHooks(
         hooks: Hook[],
         interaction: ChatInputCommandInteraction | MessageComponentInteraction,
-        env: Env
+        env: Env,
     ): Promise<boolean> {
         for (const hook of hooks) {
             const result = await Promise.resolve(hook(interaction, env));
@@ -181,7 +202,7 @@ class Client {
                             break;
                         }
 
-                        const beforeResult = await this.runHooks(this.beforeHooks, chatInteraction, env);
+                        const beforeResult = await this.runHooks([...this.beforeAllHooks, ...this.beforeCommandHooks], chatInteraction, env);
                         if (!beforeResult) {
                             if (chatInteraction.response) {
                                 return this.respond(chatInteraction.response);
@@ -212,7 +233,7 @@ class Client {
                         // Execute command
                         await commandToExecute.execute(chatInteraction, env)
 
-                        const afterResult = await this.runHooks(this.afterHooks, chatInteraction, env);
+                        const afterResult = await this.runHooks([...this.afterAllHooks, ...this.afterCommandHooks], chatInteraction, env);
                         if (!afterResult) {
                             if (chatInteraction.response) {
                                 return this.respond(chatInteraction.response);
@@ -242,7 +263,7 @@ class Client {
                         });
                     }
 
-                    const beforeResult = await this.runHooks(this.beforeHooks, msgComponentInteraction, env);
+                    const beforeResult = await this.runHooks([...this.beforeAllHooks, ...this.beforeComponentHooks], msgComponentInteraction, env);
                     if (!beforeResult) {
                         if (msgComponentInteraction.response) {
                             return this.respond(msgComponentInteraction.response);
@@ -253,7 +274,7 @@ class Client {
 
                     await component.execute(msgComponentInteraction, env, customIdData)
 
-                    const afterResult = await this.runHooks(this.afterHooks, msgComponentInteraction, env);
+                    const afterResult = await this.runHooks([...this.afterAllHooks, ...this.afterComponentHooks], msgComponentInteraction, env);
                     if (!afterResult) {
                         if (msgComponentInteraction.response) {
                             return this.respond(msgComponentInteraction.response);

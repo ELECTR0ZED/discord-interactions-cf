@@ -383,7 +383,7 @@ class Client {
 
                     await modal.execute(modalInteraction, env, modalCustomIdData)
 
-                    const afterResult = await this.runHooks([...this.afterAllHooks, ...this.afterComponentHooks], modalInteraction, env);
+                    const afterResult = await this.runHooks([...this.afterAllHooks, ...this.afterModalHooks], modalInteraction, env);
                     if (!afterResult) {
                         if (modalInteraction.response) {
                             return this.respond(modalInteraction.response);

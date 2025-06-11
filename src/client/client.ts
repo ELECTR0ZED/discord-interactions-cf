@@ -20,7 +20,7 @@ import { getSubcommandCommand } from "../helpers/command";
 import { AutocompleteInteraction } from "../structures/AutocompleteInteraction";
 
 type Hook = (
-    interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction,
+    interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction | AutocompleteInteraction,
     env: Env,
 ) => Promise<any> | any;
 
@@ -35,6 +35,8 @@ class Client {
     private afterCommandHooks: Hook[] = [];
     private beforeComponentHooks: Hook[] = [];
     private afterComponentHooks: Hook[] = [];
+    private beforeAutocompleteHooks: Hook[] = [];
+    private afterAutocompleteHooks: Hook[] = [];
     private beforeModalHooks: Hook[] = [];
     private afterModalHooks: Hook[] = [];
 
@@ -130,6 +132,15 @@ class Client {
         return this;
     }
 
+    addBeforeAutocompleteHook(fn: Hook) {
+        this.beforeAutocompleteHooks.push(fn);
+        return this;
+    }
+    addAfterAutocompleteHook(fn: Hook) {
+        this.afterAutocompleteHooks.push(fn);
+        return this;
+    }
+
     addBeforeModalHook(fn: Hook) {
         this.beforeModalHooks.push(fn);
         return this;
@@ -146,7 +157,7 @@ class Client {
      */
     private async runHooks(
         hooks: Hook[],
-        interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction,
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction | AutocompleteInteraction,
         env: Env,
     ): Promise<boolean> {
         for (const hook of hooks) {
@@ -331,6 +342,16 @@ class Client {
                     console.error('Unknown command:', autocompleteInteraction.commandName);
                     break;
                 }
+
+                const beforeResult = await this.runHooks([...this.beforeAllHooks, ...this.beforeAutocompleteHooks], autocompleteInteraction, env);
+                    if (!beforeResult) {
+                        if (autocompleteInteraction.response) {
+                            return this.respond(autocompleteInteraction.response);
+                        }
+
+                        return new Response(null, { status: 200 });
+                    }
+
                 const subcommandGroup = autocompleteInteraction.options.getSubcommandGroup();
                 const subcommand = autocompleteInteraction.options.getSubcommand();
                 let option: ApplicationCommandOptionBaseExtended | undefined;
@@ -352,16 +373,23 @@ class Client {
                     console.error('Unknown option:', focusedOptionName);
                     break;
                 }
-                
+
                 if (option && typeof option.execute === 'function') {
-                    return this.respond(
-                        await option.execute(autocompleteInteraction, focusedOptionValue, env)
-                    );
+                    await option.execute(autocompleteInteraction, focusedOptionValue, env)
                 } else {
                     console.error('Option does not have an execute function:', focusedOptionName);
                 }
 
-                break;
+                const afterResult = await this.runHooks([...this.afterAllHooks, ...this.afterAutocompleteHooks], autocompleteInteraction, env);
+                if (!afterResult) {
+                    if (autocompleteInteraction.response) {
+                        return this.respond(autocompleteInteraction.response);
+                    }
+
+                    return new Response(null, { status: 200 });
+                }
+                
+                return this.respond(autocompleteInteraction.response);
             case InteractionType.ModalSubmit:
                 const modalInteraction = new ModalSubmitInteraction(
                     this,

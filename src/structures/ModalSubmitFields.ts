@@ -1,5 +1,5 @@
 import { ComponentType } from 'discord-api-types/v10';
-import { ActionRowModalData, ModalData } from './ModalSubmitInteraction';
+import { ActionRowModalData, ModalData, ModalDataByType } from './ModalSubmitInteraction';
 
 class ModalSubmitFields {
     components: ActionRowModalData[];
@@ -9,15 +9,24 @@ class ModalSubmitFields {
         this.components = components;
 
         this.fields = components.reduce((accumulator, next) => {
-            for (const component of next.components) {
-                accumulator.set(component.customId, component);
+            if ('components' in next) {
+                for (const component of next.components) {
+                    if ('customId' in component) {
+                        accumulator.set(component.customId, component);
+                    }
+                }
+            }
+
+            if ('component' in next) {
+                const component = next.component as ModalData;
+                accumulator.set(component.customId, component)
             }
 
             return accumulator;
         }, new Map());
     }
 
-    getField(customId: string, type: ComponentType|undefined): ModalData | null {
+    getField<T extends keyof ModalDataByType>(customId: string, type: T | undefined): ModalDataByType[T] | null {
         const field = this.fields.get(customId);
         if (!field) return null;
 
@@ -25,7 +34,7 @@ class ModalSubmitFields {
             return null;
         }
 
-        return field;
+        return field as ModalDataByType[T];
     }
 
     getTextInputValue(customId: string): string | undefined {

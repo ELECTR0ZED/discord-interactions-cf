@@ -2,6 +2,7 @@ import { BaseInteraction } from './BaseInteraction.js';
 import Client from '../client/client';
 import { APIMessageComponentInteraction } from 'discord-api-types/v10';
 import { Message } from './Message.js';
+import { extractInteractiveComponents } from '../helpers/component.js';
 
 // Represents a message component interaction.
 class MessageComponentInteraction extends BaseInteraction {
@@ -24,7 +25,7 @@ class MessageComponentInteraction extends BaseInteraction {
 
     // The component which was interacted with
     get component() {
-        return this.message.components?.flatMap(row => row.components)
+        return this.message.components?.flatMap(extractInteractiveComponents)
         .find(component => 'custom_id' in component && component.custom_id === this.customId);
     }
 }

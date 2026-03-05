@@ -1,4 +1,4 @@
-import { APIInteractionGuildMember, APIAvatarDecorationData } from "discord-api-types/v10";
+import { APIInteractionDataResolvedGuildMember, APIAvatarDecorationData } from "discord-api-types/v10";
 import Client from "../client/client";
 import { PartialInteractionGuild } from "./PartialInteractionGuild";
 import { Base } from './Base.js';
@@ -6,47 +6,43 @@ import { ImageURLOptions } from '@discordjs/rest';
 import { User } from './User';
 
 // Represents a member of a guild on Discord.
-class InteractionGuildMember extends Base {
+class ResolvedGuildMember extends Base {
     user: User;
     guild: PartialInteractionGuild;
-    nickname: APIInteractionGuildMember['nick'];
-    avatar: APIInteractionGuildMember['avatar'];
-    banner: APIInteractionGuildMember['banner'];
-    roles: APIInteractionGuildMember['roles'];
+    nickname: APIInteractionDataResolvedGuildMember['nick'];
+    avatar: APIInteractionDataResolvedGuildMember['avatar'];
+    banner: APIInteractionDataResolvedGuildMember['banner'];
+    roles: APIInteractionDataResolvedGuildMember['roles'];
     joinedTimestamp: number|null;
     premiumSinceTimestamp: number | null;
-    deaf: APIInteractionGuildMember['deaf'];
-    mute: APIInteractionGuildMember['mute'];
-    flags: APIInteractionGuildMember['flags'];
-    pending: APIInteractionGuildMember['pending'];
+    flags: APIInteractionDataResolvedGuildMember['flags'];
+    pending: APIInteractionDataResolvedGuildMember['pending'];
     communicationDisabledUntilTimestamp: number | null;
     avatarDecorationData: {
         asset: APIAvatarDecorationData['asset'];
         skuId: APIAvatarDecorationData['sku_id']; 
     } | null;
-    permissions: APIInteractionGuildMember['permissions'];
+    permissions: APIInteractionDataResolvedGuildMember['permissions'];
 
-    constructor(client: Client, data: APIInteractionGuildMember, guild: PartialInteractionGuild) {
+    constructor(client: Client, member: APIInteractionDataResolvedGuildMember, user: User, guild: PartialInteractionGuild) {
         super(client);
 
-        this.user = new User(this.client, data.user);
+        this.user = user;
         this.guild = guild;
-        this.nickname = data.nick;
-        this.avatar = data.avatar;
-        this.banner = data.banner;
-        this.roles = data.roles;
-        this.joinedTimestamp = data.joined_at ? Date.parse(data.joined_at) : null;
-        this.premiumSinceTimestamp = data.premium_since ? Date.parse(data.premium_since) : null;
-        this.deaf = data.deaf;
-        this.mute = data.mute;
-        this.flags = data.flags;
-        this.pending = data.pending ?? false;
-        this.communicationDisabledUntilTimestamp = data.communication_disabled_until ? Date.parse(data.communication_disabled_until) : null;
-        this.avatarDecorationData = data.avatar_decoration_data ? {
-			asset: data.avatar_decoration_data.asset,
-			skuId: data.avatar_decoration_data.sku_id,
+        this.nickname = member.nick;
+        this.avatar = member.avatar;
+        this.banner = member.banner;
+        this.roles = member.roles;
+        this.joinedTimestamp = member.joined_at ? Date.parse(member.joined_at) : null;
+        this.premiumSinceTimestamp = member.premium_since ? Date.parse(member.premium_since) : null;
+        this.flags = member.flags;
+        this.pending = member.pending ?? false;
+        this.communicationDisabledUntilTimestamp = member.communication_disabled_until ? Date.parse(member.communication_disabled_until) : null;
+        this.avatarDecorationData = member.avatar_decoration_data ? {
+			asset: member.avatar_decoration_data.asset,
+			skuId: member.avatar_decoration_data.sku_id,
 		} : null;
-        this.permissions = data.permissions;
+        this.permissions = member.permissions;
     }
 
     avatarURL(options: ImageURLOptions = {}) {
@@ -94,4 +90,4 @@ class InteractionGuildMember extends Base {
     }
 }
 
-export { InteractionGuildMember };
+export { ResolvedGuildMember };

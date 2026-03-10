@@ -7,7 +7,7 @@ export default async function (client: Client, interaction: MessageComponentInte
     const component = client.components.get(customId);
     if (component) {
         if (component.authorOnly && interaction.user.id !== interaction.message.interactionMetadata?.user.id) {
-            return
+            return 
         }
 
         await component.execute(interaction, env, customIdData)

@@ -14,7 +14,6 @@ import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInter
 import { UserContextMenuCommandInteraction } from "../structures/UserContextMenuCommandInteraction";
 import { MessageContextMenuCommandInteraction } from "../structures/MessageContextMenuCommandInteraction";
 import { MessageComponentInteraction } from "../structures/MessageComponentInteraction";
-import { getSubcommandCommand } from "../helpers/command";
 import { AutocompleteInteraction } from "../structures/AutocompleteInteraction";
 import { createInteraction } from "../handlers/createInteraction";
 import handleChatInputApplicationCommand from "../handlers/ApplicationCommand/ChatInput";
@@ -38,7 +37,10 @@ type Hook = (
 ) => Promise<any> | any;
 
 type Hooks = {
-    [key in InteractionType]: Hook[];
+    [key in InteractionType]: {
+        before: Hook[];
+        after: Hook[];
+    }
 }
 
 class Client {
@@ -50,11 +52,11 @@ class Client {
     private beforeAllHooks: Hook[] = [];
     private afterAllHooks: Hook[] = [];
     private hooks: Hooks = {
-        [InteractionType.Ping]: [],
-        [InteractionType.ApplicationCommand]: [],
-        [InteractionType.MessageComponent]: [],
-        [InteractionType.ApplicationCommandAutocomplete]: [],
-        [InteractionType.ModalSubmit]: [],
+        [InteractionType.Ping]: { before: [], after: [] },
+        [InteractionType.ApplicationCommand]: { before: [], after: [] },
+        [InteractionType.MessageComponent]: { before: [], after: [] },
+        [InteractionType.ApplicationCommandAutocomplete]: { before: [], after: [] },
+        [InteractionType.ModalSubmit]: { before: [], after: [] },
 
     };
 
@@ -156,38 +158,38 @@ class Client {
     }
 
     addBeforeCommandHook(fn: Hook) {
-        this.hooks[InteractionType.ApplicationCommand].push(fn);
+        this.hooks[InteractionType.ApplicationCommand].before.push(fn);
         return this;
     }
     addAfterCommandHook(fn: Hook) {
-        this.hooks[InteractionType.ApplicationCommand].push(fn);
+        this.hooks[InteractionType.ApplicationCommand].after.push(fn);
         return this;
     }
 
     addBeforeComponentHook(fn: Hook) {
-        this.hooks[InteractionType.MessageComponent].push(fn);
+        this.hooks[InteractionType.MessageComponent].before.push(fn);
         return this;
     }
     addAfterComponentHook(fn: Hook) {
-        this.hooks[InteractionType.MessageComponent].push(fn);
+        this.hooks[InteractionType.MessageComponent].after.push(fn);
         return this;
     }
 
     addBeforeAutocompleteHook(fn: Hook) {
-        this.hooks[InteractionType.ApplicationCommandAutocomplete].push(fn);
+        this.hooks[InteractionType.ApplicationCommandAutocomplete].before.push(fn);
         return this;
     }
     addAfterAutocompleteHook(fn: Hook) {
-        this.hooks[InteractionType.ApplicationCommandAutocomplete].push(fn);
+        this.hooks[InteractionType.ApplicationCommandAutocomplete].after.push(fn);
         return this;
     }
 
     addBeforeModalHook(fn: Hook) {
-        this.hooks[InteractionType.ModalSubmit].push(fn);
+        this.hooks[InteractionType.ModalSubmit].before.push(fn);
         return this;
     }
     addAfterModalHook(fn: Hook) {
-        this.hooks[InteractionType.ModalSubmit].push(fn);
+        this.hooks[InteractionType.ModalSubmit].after.push(fn);
         return this;
     }
 
@@ -273,8 +275,8 @@ class Client {
             return new Response('Bad Request', { status: 400 });
         }
 
-        const beforeHooks = [...this.beforeAllHooks, ...this.hooks[interaction.type]];
-        const afterHooks = [...this.afterAllHooks, ...this.hooks[interaction.type]];
+        const beforeHooks = [...this.beforeAllHooks, ...this.hooks[interaction.type].before];
+        const afterHooks = [...this.afterAllHooks, ...this.hooks[interaction.type].after];
 
 
         const beforeResult = await this.runHooks(beforeHooks, interaction, env);

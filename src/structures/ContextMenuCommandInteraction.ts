@@ -1,10 +1,8 @@
 import {
 	APIContextMenuInteraction,
-	ApplicationCommandOptionType,
 } from 'discord-api-types/v10';
-import { BaseInteraction, CommandInteractionOption } from './BaseInteraction';
+import { BaseInteraction } from './BaseInteraction';
 import Client from '../client/client';
-import { Message } from './Message';
 
 
 // Represents an option of a received context menu command interaction.

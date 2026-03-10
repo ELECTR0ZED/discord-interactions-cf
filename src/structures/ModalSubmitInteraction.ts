@@ -136,7 +136,7 @@ class ModalSubmitInteraction extends BaseInteraction {
 
         let data = {
             type: rawComponent.type,
-            id: rawComponent.type,
+            id: rawComponent.id,
         } as ModalData;
 
         if ('custom_id' in rawComponent) data.customId = rawComponent.custom_id as string;

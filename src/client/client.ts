@@ -37,6 +37,10 @@ type Hook = (
     env: Env,
 ) => Promise<any> | any;
 
+type Hooks = {
+    [key in InteractionType]: Hook[];
+}
+
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
     contextMenuCommands: Map<string, ContextMenuCommandBuilder> = new Map();
@@ -45,14 +49,14 @@ class Client {
     customIdDelimiter = ':';
     private beforeAllHooks: Hook[] = [];
     private afterAllHooks: Hook[] = [];
-    private beforeCommandHooks: Hook[] = [];
-    private afterCommandHooks: Hook[] = [];
-    private beforeComponentHooks: Hook[] = [];
-    private afterComponentHooks: Hook[] = [];
-    private beforeAutocompleteHooks: Hook[] = [];
-    private afterAutocompleteHooks: Hook[] = [];
-    private beforeModalHooks: Hook[] = [];
-    private afterModalHooks: Hook[] = [];
+    private hooks: Hooks = {
+        [InteractionType.Ping]: [],
+        [InteractionType.ApplicationCommand]: [],
+        [InteractionType.MessageComponent]: [],
+        [InteractionType.ApplicationCommandAutocomplete]: [],
+        [InteractionType.ModalSubmit]: [],
+
+    };
 
     constructor(customIdDelimiter?: string) {
         if (customIdDelimiter) {
@@ -152,38 +156,38 @@ class Client {
     }
 
     addBeforeCommandHook(fn: Hook) {
-        this.beforeCommandHooks.push(fn);
+        this.hooks[InteractionType.ApplicationCommand].push(fn);
         return this;
     }
     addAfterCommandHook(fn: Hook) {
-        this.afterCommandHooks.push(fn);
+        this.hooks[InteractionType.ApplicationCommand].push(fn);
         return this;
     }
 
     addBeforeComponentHook(fn: Hook) {
-        this.beforeComponentHooks.push(fn);
+        this.hooks[InteractionType.MessageComponent].push(fn);
         return this;
     }
     addAfterComponentHook(fn: Hook) {
-        this.afterComponentHooks.push(fn);
+        this.hooks[InteractionType.MessageComponent].push(fn);
         return this;
     }
 
     addBeforeAutocompleteHook(fn: Hook) {
-        this.beforeAutocompleteHooks.push(fn);
+        this.hooks[InteractionType.ApplicationCommandAutocomplete].push(fn);
         return this;
     }
     addAfterAutocompleteHook(fn: Hook) {
-        this.afterAutocompleteHooks.push(fn);
+        this.hooks[InteractionType.ApplicationCommandAutocomplete].push(fn);
         return this;
     }
 
     addBeforeModalHook(fn: Hook) {
-        this.beforeModalHooks.push(fn);
+        this.hooks[InteractionType.ModalSubmit].push(fn);
         return this;
     }
     addAfterModalHook(fn: Hook) {
-        this.afterModalHooks.push(fn);
+        this.hooks[InteractionType.ModalSubmit].push(fn);
         return this;
     }
 
@@ -265,10 +269,15 @@ class Client {
 
         const interaction = createInteraction(this, rawInteraction);
         if (!interaction) {
-            throw new Error('Failed to resolve interaction');
+            console.error('Failed to create interaction from payload:', rawInteraction);
+            return new Response('Bad Request', { status: 400 });
         }
 
-        const beforeResult = await this.runHooks([...this.beforeAllHooks, ...this.beforeCommandHooks], interaction, env);
+        const beforeHooks = [...this.beforeAllHooks, ...this.hooks[interaction.type]];
+        const afterHooks = [...this.afterAllHooks, ...this.hooks[interaction.type]];
+
+
+        const beforeResult = await this.runHooks(beforeHooks, interaction, env);
         if (!beforeResult) {
             if (interaction.response) {
                 return this.respond(interaction.response);
@@ -308,7 +317,7 @@ class Client {
                 break;
         }
 
-        const afterResult = await this.runHooks([...this.afterAllHooks, ...this.afterCommandHooks], interaction, env);
+        const afterResult = await this.runHooks(afterHooks, interaction, env);
         if (!afterResult) {
             if (interaction.response) {
                 return this.respond(interaction.response);
@@ -322,8 +331,9 @@ class Client {
 
     async registerCommands(token: string, clientId: string) {
         const commands = Array.from(this.commands.values()).map(command => command.toJSON());
+        const contextMenuCommands = Array.from(this.contextMenuCommands.values()).map(command => command.toJSON());
         
-        await registerCommands(commands, token, clientId);
+        await registerCommands([...commands, ...contextMenuCommands], token, clientId);
     }
 
     private respond(payload: APIInteractionResponse|null|undefined) {

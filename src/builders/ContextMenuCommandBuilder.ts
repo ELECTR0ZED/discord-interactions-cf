@@ -6,7 +6,7 @@ import { ApplicationCommandOptionBaseExtended } from './ApplicationCommandOption
 import { MessageContextMenuCommandInteraction } from '../structures/MessageContextMenuCommandInteraction';
 import { UserContextMenuCommandInteraction } from '../structures/UserContextMenuCommandInteraction';
 
-type AnyContextMenuCommandInteraction = MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction;
+export type AnyContextMenuCommandInteraction = MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction;
 
 export type ContextMenuCommandBuilderExecuteFunction = (interaction: AnyContextMenuCommandInteraction, env: Env) => Promise<void>;
 

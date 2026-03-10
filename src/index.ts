@@ -31,7 +31,7 @@ export * from './builders/SlashCommandModalBuilder';
 export { SlashCommandBuilder, SlashCommandBuilderExecuteFunction } from './builders/SlashCommandBuilder';
 export * from './builders/SlashCommandStringOption';
 export * from './builders/SlashCommandSubcommandBuilder';
-export { ContextMenuCommandBuilder, ContextMenuCommandBuilderExecuteFunction } from './builders/ContextMenuCommandBuilder';
+export { ContextMenuCommandBuilder, ContextMenuCommandBuilderExecuteFunction, AnyContextMenuCommandInteraction } from './builders/ContextMenuCommandBuilder';
 
 // Structures
 export * from './structures/Attachment';

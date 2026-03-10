@@ -7,7 +7,11 @@ import {
     APIInteractionResponse,
 } from "discord-api-types/v10";
 import verifyKey from "../helpers/verifyKey";
-import { SlashCommandBuilder, SlashCommandComponentBuilder, ModalSubmitInteraction, SlashCommandModalBuilder, BaseInteraction } from "../index";
+import { SlashCommandBuilder } from "../builders/SlashCommandBuilder";
+import { BaseInteraction } from "../structures/BaseInteraction";
+import { ModalSubmitInteraction } from "../structures/ModalSubmitInteraction";
+import { SlashCommandComponentBuilder } from "../builders/SlashCommandComponentBuilder";
+import { SlashCommandModalBuilder } from "../builders/SlashCommandModalBuilder";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
 import { registerCommands } from "../utils/registerCommands";
 import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInteraction";

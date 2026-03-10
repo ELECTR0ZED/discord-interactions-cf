@@ -1,7 +1,8 @@
 import { 
     ApplicationCommandOptionType,
 } from "discord-api-types/v10";
-import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from "../index";
+import { SlashCommandBuilder } from "../builders/SlashCommandBuilder";
+import { SlashCommandSubcommandBuilder } from "../builders/SlashCommandSubcommandBuilder";
 import { SlashCommandSubcommandGroupBuilder } from '@discordjs/builders'
 
 export function getSubcommandCommand(

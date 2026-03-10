@@ -5,40 +5,64 @@ import {
     InteractionResponseType,
     InteractionType,
     APIInteractionResponse,
-    APIChatInputApplicationCommandInteraction,
-    APIMessageComponentInteraction,
-    APIApplicationCommandAutocompleteInteraction,
-    APIModalSubmitInteraction,
 } from "discord-api-types/v10";
 import verifyKey from "../helpers/verifyKey";
-import { SlashCommandBuilder, SlashCommandComponentBuilder, ApplicationCommandOptionBaseExtended, SlashCommandSubcommandBuilder, ModalSubmitInteraction, SlashCommandModalBuilder } from "../index";
+import { SlashCommandBuilder } from "../builders/SlashCommandBuilder";
+import { BaseInteraction } from "../structures/BaseInteraction";
+import { ModalSubmitInteraction } from "../structures/ModalSubmitInteraction";
+import { SlashCommandComponentBuilder } from "../builders/SlashCommandComponentBuilder";
+import { SlashCommandModalBuilder } from "../builders/SlashCommandModalBuilder";
 import { REST, DefaultRestOptions } from '@discordjs/rest';
 import { registerCommands } from "../utils/registerCommands";
 import { ChatInputCommandInteraction } from "../structures/ChatInputCommandInteraction";
+import { UserContextMenuCommandInteraction } from "../structures/UserContextMenuCommandInteraction";
+import { MessageContextMenuCommandInteraction } from "../structures/MessageContextMenuCommandInteraction";
 import { MessageComponentInteraction } from "../structures/MessageComponentInteraction";
-import { getSubcommandCommand } from "../helpers/command";
 import { AutocompleteInteraction } from "../structures/AutocompleteInteraction";
+import { createInteraction } from "../handlers/createInteraction";
+import handleChatInputApplicationCommand from "../handlers/ApplicationCommand/ChatInput";
+import handleMessageComponent from "../handlers/MessageComponent";
+import handleAutocomplete from "../handlers/Autocomplete";
+import handleModalSubmit from "../handlers/ModalSubmit";
+import handleContextMenuApplicationCommand from "../handlers/ApplicationCommand/ContextMenu";
+import { ContextMenuCommandBuilder } from "../builders/ContextMenuCommandBuilder";
+
+type anyInteraction = 
+    | ChatInputCommandInteraction
+    | UserContextMenuCommandInteraction
+    | MessageContextMenuCommandInteraction
+    | MessageComponentInteraction
+    | AutocompleteInteraction
+    | ModalSubmitInteraction;
 
 type Hook = (
-    interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction | AutocompleteInteraction,
+    interaction: anyInteraction,
     env: Env,
 ) => Promise<any> | any;
 
+type Hooks = {
+    [key in InteractionType]: {
+        before: Hook[];
+        after: Hook[];
+    }
+}
+
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
+    contextMenuCommands: Map<string, ContextMenuCommandBuilder> = new Map();
     components: Map<string, SlashCommandComponentBuilder> = new Map();
     modals: Map<string, SlashCommandModalBuilder> = new Map();
     customIdDelimiter = ':';
     private beforeAllHooks: Hook[] = [];
     private afterAllHooks: Hook[] = [];
-    private beforeCommandHooks: Hook[] = [];
-    private afterCommandHooks: Hook[] = [];
-    private beforeComponentHooks: Hook[] = [];
-    private afterComponentHooks: Hook[] = [];
-    private beforeAutocompleteHooks: Hook[] = [];
-    private afterAutocompleteHooks: Hook[] = [];
-    private beforeModalHooks: Hook[] = [];
-    private afterModalHooks: Hook[] = [];
+    private hooks: Hooks = {
+        [InteractionType.Ping]: { before: [], after: [] },
+        [InteractionType.ApplicationCommand]: { before: [], after: [] },
+        [InteractionType.MessageComponent]: { before: [], after: [] },
+        [InteractionType.ApplicationCommandAutocomplete]: { before: [], after: [] },
+        [InteractionType.ModalSubmit]: { before: [], after: [] },
+
+    };
 
     constructor(customIdDelimiter?: string) {
         if (customIdDelimiter) {
@@ -71,6 +95,29 @@ class Client {
         }
 
         this.commands.set(command.name, command);
+
+        return this;
+    }
+
+    addContextMenu(command: ContextMenuCommandBuilder) {
+        if (typeof command.toJSON !== 'function') {
+            throw new Error('Invalid command object. Ensure it is built using ContextMenuCommandBuilder.');
+        }
+
+        const json = command.toJSON();
+        if (json && typeof json !== 'object') {
+            throw new Error('Invalid command object. Ensure it is built using ContextMenuCommandBuilder.');
+        }
+
+        if (!command.name) {
+            throw new Error('Context menu command must have a name.');
+        }
+
+        if (this.contextMenuCommands.has(command.name)) {
+            throw new Error(`Context menu command with name "${command.name}" already exists.`);
+        }
+
+        this.contextMenuCommands.set(command.name, command);
 
         return this;
     }
@@ -115,38 +162,38 @@ class Client {
     }
 
     addBeforeCommandHook(fn: Hook) {
-        this.beforeCommandHooks.push(fn);
+        this.hooks[InteractionType.ApplicationCommand].before.push(fn);
         return this;
     }
     addAfterCommandHook(fn: Hook) {
-        this.afterCommandHooks.push(fn);
+        this.hooks[InteractionType.ApplicationCommand].after.push(fn);
         return this;
     }
 
     addBeforeComponentHook(fn: Hook) {
-        this.beforeComponentHooks.push(fn);
+        this.hooks[InteractionType.MessageComponent].before.push(fn);
         return this;
     }
     addAfterComponentHook(fn: Hook) {
-        this.afterComponentHooks.push(fn);
+        this.hooks[InteractionType.MessageComponent].after.push(fn);
         return this;
     }
 
     addBeforeAutocompleteHook(fn: Hook) {
-        this.beforeAutocompleteHooks.push(fn);
+        this.hooks[InteractionType.ApplicationCommandAutocomplete].before.push(fn);
         return this;
     }
     addAfterAutocompleteHook(fn: Hook) {
-        this.afterAutocompleteHooks.push(fn);
+        this.hooks[InteractionType.ApplicationCommandAutocomplete].after.push(fn);
         return this;
     }
 
     addBeforeModalHook(fn: Hook) {
-        this.beforeModalHooks.push(fn);
+        this.hooks[InteractionType.ModalSubmit].before.push(fn);
         return this;
     }
     addAfterModalHook(fn: Hook) {
-        this.afterModalHooks.push(fn);
+        this.hooks[InteractionType.ModalSubmit].after.push(fn);
         return this;
     }
 
@@ -155,9 +202,9 @@ class Client {
      * → If any returns (or resolves to) false, stop and return false.  
      * → Otherwise return true.
      */
-    private async runHooks(
+    async runHooks(
         hooks: Hook[],
-        interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction | AutocompleteInteraction,
+        interaction: anyInteraction,
         env: Env,
     ): Promise<boolean> {
         for (const hook of hooks) {
@@ -207,16 +254,16 @@ class Client {
         }
 
         // Parse the interaction
-        const interaction = JSON.parse(body) as APIInteraction;
+        const rawInteraction = JSON.parse(body) as APIInteraction;
 
-        if (interaction.application_id !== env.CLIENT_ID) {
+        if (rawInteraction.application_id !== env.CLIENT_ID) {
             return new Response('Invalid application ID', {
                 status: 401,
             });
         }
 
         // If the interaction is a ping, respond with a pong
-        if (interaction.type === InteractionType.Ping) {
+        if (rawInteraction.type === InteractionType.Ping) {
             const response: APIInteractionResponsePong = {
                 type: InteractionResponseType.Pong,
             };
@@ -226,63 +273,36 @@ class Client {
             });
         }
 
-        // Handle other interaction types here
+        const interaction = createInteraction(this, rawInteraction);
+        if (!interaction) {
+            console.error('Failed to create interaction from payload:', rawInteraction);
+            return new Response('Bad Request', { status: 400 });
+        }
+
+        const beforeHooks = [...this.beforeAllHooks, ...this.hooks[interaction.type].before];
+        const afterHooks = [...this.afterAllHooks, ...this.hooks[interaction.type].after];
+
+
+        const beforeResult = await this.runHooks(beforeHooks, interaction, env);
+        if (!beforeResult) {
+            if (interaction.response) {
+                return this.respond(interaction.response);
+            }
+
+            return new Response(null, { status: 200 });
+        }
+
+        // Handle interaction types here
         switch (interaction.type) {
             case InteractionType.ApplicationCommand:
                 switch (interaction.data.type) {
                     case ApplicationCommandType.ChatInput:
-                        const chatInteraction = new ChatInputCommandInteraction(
-                            this,
-                            interaction as APIChatInputApplicationCommandInteraction
-                        );
-                        const command = this.commands.get(chatInteraction.data.name);
-                        if (!command) {
-                            console.error('Unknown command:', chatInteraction.data.name);
-                            break;
-                        }
-
-                        const beforeResult = await this.runHooks([...this.beforeAllHooks, ...this.beforeCommandHooks], chatInteraction, env);
-                        if (!beforeResult) {
-                            if (chatInteraction.response) {
-                                return this.respond(chatInteraction.response);
-                            }
-
-                            return new Response(null, { status: 200 });
-                        }
-                        
-                        const subcommandGroup = chatInteraction.options.getSubcommandGroup();
-                        const subcommand = chatInteraction.options.getSubcommand();
-
-                        let commandToExecute: SlashCommandBuilder | SlashCommandSubcommandBuilder = command;
-                        
-                        if (subcommand) {
-                            const subcommandCommand = getSubcommandCommand(command, subcommandGroup, subcommand);
-                            if (!subcommandCommand) {
-                                console.error(
-                                    subcommandGroup
-                                    ? `Unknown subcommand group "${subcommandGroup}" or subcommand "${subcommand}"`
-                                    : `Unknown subcommand: ${subcommand}`
-                                );
-                                break;
-                            }
-                            
-                            commandToExecute = subcommandCommand;
-                        }
-
-                        // Execute command
-                        await commandToExecute.execute(chatInteraction, env)
-
-                        const afterResult = await this.runHooks([...this.afterAllHooks, ...this.afterCommandHooks], chatInteraction, env);
-                        if (!afterResult) {
-                            if (chatInteraction.response) {
-                                return this.respond(chatInteraction.response);
-                            }
-
-                            return new Response(null, { status: 200 });
-                        }
-
-
-                        return this.respond(chatInteraction.response);
+                        await handleChatInputApplicationCommand(this, interaction as ChatInputCommandInteraction, env);
+                        break;
+                    case ApplicationCommandType.User:
+                    case ApplicationCommandType.Message:
+                        await handleContextMenuApplicationCommand(this, interaction as UserContextMenuCommandInteraction|MessageContextMenuCommandInteraction, env);
+                        break;
                     default:
                         console.error('Unknown command type:', interaction.data.type);
                         break;
@@ -290,151 +310,36 @@ class Client {
                 break;
             case InteractionType.MessageComponent:
                 // Handle message components
-                const componentInteraction = interaction as APIMessageComponentInteraction;
-                const customId = componentInteraction.data.custom_id.split(this.customIdDelimiter)[0];
-                const customIdData = componentInteraction.data.custom_id.split(this.customIdDelimiter).slice(1);
-                const component = this.components.get(customId);
-                if (component) {
-                    const msgComponentInteraction = new MessageComponentInteraction(this, componentInteraction)
-                    if (component.authorOnly && msgComponentInteraction.user.id !== msgComponentInteraction.message.interactionMetadata?.user.id) {
-                        return new Response('Unauthorized', {
-                            status: 401,
-                        });
-                    }
-
-                    const beforeResult = await this.runHooks([...this.beforeAllHooks, ...this.beforeComponentHooks], msgComponentInteraction, env);
-                    if (!beforeResult) {
-                        if (msgComponentInteraction.response) {
-                            return this.respond(msgComponentInteraction.response);
-                        }
-
-                        return new Response(null, { status: 200 });
-                    }
-
-                    await component.execute(msgComponentInteraction, env, customIdData)
-
-                    const afterResult = await this.runHooks([...this.afterAllHooks, ...this.afterComponentHooks], msgComponentInteraction, env);
-                    if (!afterResult) {
-                        if (msgComponentInteraction.response) {
-                            return this.respond(msgComponentInteraction.response);
-                        }
-
-                        return new Response(null, { status: 200 });
-                    }
-
-                    return this.respond(msgComponentInteraction.response);
-                } else {
-                    console.error('Unknown component:', customId);
-                }
+                await handleMessageComponent(this, interaction as MessageComponentInteraction, env);
                 break;
             case InteractionType.ApplicationCommandAutocomplete:
-                const autocompleteInteraction = new AutocompleteInteraction(
-                    this,
-                    interaction as APIApplicationCommandAutocompleteInteraction
-                );
-
-                const focusedOption = autocompleteInteraction.options.getFocused();
-                const focusedOptionName = focusedOption.name;
-                const focusedOptionValue = focusedOption.value as string;
-
-                const commandAutocomplete = this.commands.get(autocompleteInteraction.commandName);
-                if (!commandAutocomplete) {
-                    console.error('Unknown command:', autocompleteInteraction.commandName);
-                    break;
-                }
-
-                const beforeResult = await this.runHooks([...this.beforeAllHooks, ...this.beforeAutocompleteHooks], autocompleteInteraction, env);
-                    if (!beforeResult) {
-                        if (autocompleteInteraction.response) {
-                            return this.respond(autocompleteInteraction.response);
-                        }
-
-                        return new Response(null, { status: 200 });
-                    }
-
-                const subcommandGroup = autocompleteInteraction.options.getSubcommandGroup();
-                const subcommand = autocompleteInteraction.options.getSubcommand();
-                let option: ApplicationCommandOptionBaseExtended | undefined;
-                if (subcommand) {
-                    const subcommandCommand = getSubcommandCommand(commandAutocomplete, subcommandGroup, subcommand);
-                    if (!subcommandCommand) {
-                        console.error(
-                            subcommandGroup
-                            ? `Unknown subcommand group "${subcommandGroup}" or subcommand "${subcommand}"`
-                            : `Unknown subcommand: ${subcommand}`
-                        );
-                        break;
-                    }
-                    option = subcommandCommand.options.find(o => o.name === focusedOptionName);
-                } else {
-                    option = commandAutocomplete.options.find(o => o.name === focusedOptionName);
-                }
-                if (!option) {
-                    console.error('Unknown option:', focusedOptionName);
-                    break;
-                }
-
-                if (option && typeof option.execute === 'function') {
-                    await option.execute(autocompleteInteraction, focusedOptionValue, env)
-                } else {
-                    console.error('Option does not have an execute function:', focusedOptionName);
-                }
-
-                const afterResult = await this.runHooks([...this.afterAllHooks, ...this.afterAutocompleteHooks], autocompleteInteraction, env);
-                if (!afterResult) {
-                    if (autocompleteInteraction.response) {
-                        return this.respond(autocompleteInteraction.response);
-                    }
-
-                    return new Response(null, { status: 200 });
-                }
-                
-                return this.respond(autocompleteInteraction.response);
+                await handleAutocomplete(this, interaction as AutocompleteInteraction, env);
+                break;
             case InteractionType.ModalSubmit:
-                const modalInteraction = new ModalSubmitInteraction(
-                    this,
-                    interaction as APIModalSubmitInteraction,
-                );
-
-                const modalCustomId = modalInteraction.customId.split(this.customIdDelimiter)[0];
-                const modalCustomIdData = modalInteraction.customId.split(this.customIdDelimiter).slice(1);
-                const modal = this.modals.get(modalCustomId);
-                if (modal) {
-                    const beforeResult = await this.runHooks([...this.beforeAllHooks, ...this.beforeModalHooks], modalInteraction, env);
-                    if (!beforeResult) {
-                        if (modalInteraction.response) {
-                            return this.respond(modalInteraction.response);
-                        }
-
-                        return new Response(null, { status: 200 });
-                    }
-
-                    await modal.execute(modalInteraction, env, modalCustomIdData)
-
-                    const afterResult = await this.runHooks([...this.afterAllHooks, ...this.afterModalHooks], modalInteraction, env);
-                    if (!afterResult) {
-                        if (modalInteraction.response) {
-                            return this.respond(modalInteraction.response);
-                        }
-
-                        return new Response(null, { status: 200 });
-                    }
-
-                    return this.respond(modalInteraction.response);
-                } else {
-                    console.error('Unknown modal:', modalCustomId);
-                }
+                await handleModalSubmit(this, interaction as ModalSubmitInteraction, env);
                 break;
             default:
-                console.error('Unknown interaction type:', (interaction as APIInteraction).type);
+                console.error('Unknown interaction type:', (interaction as BaseInteraction).type);
                 break;
         }
+
+        const afterResult = await this.runHooks(afterHooks, interaction, env);
+        if (!afterResult) {
+            if (interaction.response) {
+                return this.respond(interaction.response);
+            }
+
+            return new Response(null, { status: 200 });
+        }
+
+        return this.respond(interaction.response);
     }
 
     async registerCommands(token: string, clientId: string) {
         const commands = Array.from(this.commands.values()).map(command => command.toJSON());
+        const contextMenuCommands = Array.from(this.contextMenuCommands.values()).map(command => command.toJSON());
         
-        await registerCommands(commands, token, clientId);
+        await registerCommands([...commands, ...contextMenuCommands], token, clientId);
     }
 
     private respond(payload: APIInteractionResponse|null|undefined) {

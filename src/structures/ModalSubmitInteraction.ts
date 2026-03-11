@@ -23,7 +23,7 @@ export interface BaseModalData {
 }
 
 export interface SelectMenuModalData extends BaseModalData {
-    type: ComponentType.StringSelect;
+    type: ComponentType.StringSelect | ComponentType.UserSelect | ComponentType.RoleSelect | ComponentType.MentionableSelect | ComponentType.ChannelSelect;
     customId: string;
     values: string[];
     members: Map<string, ResolvedGuildMember>;
@@ -76,11 +76,6 @@ export interface LabelModalData extends BaseModalData {
     component: ModalData;
 }
 
-export interface ActionRowModalData extends BaseModalData {
-    type: ComponentType.ActionRow
-    components: LabelModalData[];
-}
-
 export type ModalDataByType = {
 	[ComponentType.StringSelect]: SelectMenuModalData;
 	[ComponentType.FileUpload]: FileUploadModalData;
@@ -104,7 +99,7 @@ class ModalSubmitInteraction extends BaseInteraction {
 
         this.components = new ModalComponentResolver(
             this.client,
-            data.data.components?.map(component => this.transformComponent(component, data.data.resolved)) as LabelModalData[],
+            data.data.components.map(component => this.transformComponent(component, data.data.resolved)) as LabelModalData[],
             transformResolved(client, this.guild, data.data.resolved),
         );
     }

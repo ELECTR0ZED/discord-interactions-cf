@@ -15,7 +15,7 @@ interface ModalSelectedMentionables {
 
 class ModalComponentResolver extends Base {
 	resolved: ResolvedData;
-	data: any;
+	data: LabelModalData[];
 	hoistedComponents: Map<string, ModalData>;
 
 	constructor(client: Client, components: LabelModalData[], resolved: ResolvedData) {
@@ -25,14 +25,11 @@ class ModalComponentResolver extends Base {
 
 		/**
 		 * The components within the modal
-		 *
-		 * @type {Array<LabelModalData>}
 		 */
 		this.data = components;
 
 		/**
 		 * The bottom-level components of the interaction
-		 *
 		 */
 		this.hoistedComponents = components.reduce((accumulator: Map<string, ModalData>, next: LabelModalData) => {
 			accumulator.set(next.component.customId, next.component);
@@ -43,9 +40,6 @@ class ModalComponentResolver extends Base {
 
 	/**
 	 * Gets a component by custom id.
-	 *
-	 * @property {string} customId The custom id of the component.
-	 * @returns {ModalData}
 	 */
 	getComponent<T extends ModalData>(customId: string): T {
 		const component = this.hoistedComponents.get(customId);

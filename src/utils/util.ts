@@ -33,7 +33,6 @@ export function transformResolved(
 	}
 
 	if (members) {
-		result.members = new Map();
 		for (const [id, member] of Object.entries(members)) {
 			const user = result.users.get(id);
 			if (!user) throw new Error(`User is missing when resolving member in modal submit interaction`);
@@ -43,21 +42,18 @@ export function transformResolved(
 	}
 
 	if (roles) {
-		result.roles = new Map();
 		for (const role of Object.values(roles)) {
 			result.roles.set(role.id, role);
 		}
 	}
 
 	if (channels) {
-		result.channels = new Map();
 		for (const apiChannel of Object.values(channels)) {
 			result.channels.set(apiChannel.id, apiChannel);
 		}
 	}
 
 	if (attachments) {
-		result.attachments = new Map();
 		for (const attachment of Object.values(attachments)) {
 			result.attachments.set(attachment.id, new Attachment(attachment));
 		}

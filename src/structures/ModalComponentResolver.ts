@@ -137,16 +137,16 @@ class ModalComponentResolver extends Base {
 	/**
 	 * Gets mentionables component
 	 */
-	getSelectedMentionables(customId: string): ModalSelectedMentionables | null {
+	getSelectedMentionables(customId: string): ModalSelectedMentionables {
 		const component = this._getTypedComponent<SelectMenuModalData>(
 			customId,
 			[ComponentType.MentionableSelect],
 		);
 
 		return {
-			users: component.users ?? new Map<string, User>(),
-			members: component.members ?? new Map<string, ResolvedGuildMember>(),
-			roles: component.roles ?? new Map<string, APIRole>(),
+			users: component.users,
+			members: component.members,
+			roles: component.roles,
 		}
 	}
 

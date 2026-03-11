@@ -22,8 +22,15 @@ export interface BaseModalData {
     id?: number;
 }
 
+export type SelectMenuModalType = 
+    | ComponentType.StringSelect
+    | ComponentType.UserSelect
+    | ComponentType.RoleSelect
+    | ComponentType.MentionableSelect
+    | ComponentType.ChannelSelect;
+
 export interface SelectMenuModalData extends BaseModalData {
-    type: ComponentType.StringSelect | ComponentType.UserSelect | ComponentType.RoleSelect | ComponentType.MentionableSelect | ComponentType.ChannelSelect;
+    type: SelectMenuModalType;
     customId: string;
     values: string[];
     members: Map<string, ResolvedGuildMember>;
@@ -138,7 +145,13 @@ class ModalSubmitInteraction extends BaseInteraction {
                 const { members, users, channels, roles, attachments } = resolved;
                 const valueSet = new Set(rawComponent.values);
 
-                if (rawComponent.type === ComponentType.StringSelect) {
+                if (
+                    rawComponent.type === ComponentType.StringSelect ||
+                    rawComponent.type === ComponentType.UserSelect ||
+                    rawComponent.type === ComponentType.RoleSelect ||
+                    rawComponent.type === ComponentType.MentionableSelect ||
+                    rawComponent.type === ComponentType.ChannelSelect
+                ) {
                     const select = data as SelectMenuModalData;
 
                     if (users) {

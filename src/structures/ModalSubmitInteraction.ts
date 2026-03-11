@@ -189,15 +189,15 @@ class ModalSubmitInteraction extends BaseInteraction {
                     values: rawComponent.values,
                 };
             case ComponentType.StringSelect:
-                return this.transformSelect<StringSelectMenuModalData>(rawComponent, resolved);
+                return this.transformSelect<StringSelectMenuModalData>(rawComponent);
             case ComponentType.UserSelect:
-                return this.transformSelect<UserSelectMenuModalData>(rawComponent, resolved);
+                return this.transformSelect<UserSelectMenuModalData>(rawComponent);
             case ComponentType.RoleSelect:
-                return this.transformSelect<RoleSelectMenuModalData>(rawComponent, resolved);
+                return this.transformSelect<RoleSelectMenuModalData>(rawComponent);
             case ComponentType.MentionableSelect:
-                return this.transformSelect<MentionableSelectMenuModalData>(rawComponent, resolved);
+                return this.transformSelect<MentionableSelectMenuModalData>(rawComponent);
             case ComponentType.ChannelSelect:
-                return this.transformSelect<ChannelSelectMenuModalData>(rawComponent, resolved);
+                return this.transformSelect<ChannelSelectMenuModalData>(rawComponent);
             case ComponentType.FileUpload:
                 return this.transformFileUpload(rawComponent, resolved);
             case ComponentType.TextDisplay:
@@ -221,7 +221,6 @@ class ModalSubmitInteraction extends BaseInteraction {
             | Extract<ModalSubmitComponent, { type: ComponentType.RoleSelect }>
             | Extract<ModalSubmitComponent, { type: ComponentType.MentionableSelect }>
             | Extract<ModalSubmitComponent, { type: ComponentType.ChannelSelect }>,
-        resolved?: APIInteractionDataResolved,
     ): T {
         const base = {
             type: rawComponent.type,
@@ -230,16 +229,19 @@ class ModalSubmitInteraction extends BaseInteraction {
             values: rawComponent.values,
         };
 
+        const valueSet = new Set(rawComponent.values);
+
         switch (rawComponent.type) {
             case ComponentType.StringSelect:
                 return base as T;
 
             case ComponentType.UserSelect: {
+
                 const data: UserSelectMenuModalData = {
                     ...base,
                     type: ComponentType.UserSelect,
-                    users: this.resolved.users,
-                    members: this.resolved.members,
+                    users: new Map([...this.resolved.users].filter(([, user]) => valueSet.has(user.id))),
+                    members: new Map([...this.resolved.members].filter(([, member]) => valueSet.has(member.user.id))),
                 };
 
                 return data as T;
@@ -249,7 +251,7 @@ class ModalSubmitInteraction extends BaseInteraction {
                 const data: RoleSelectMenuModalData = {
                     ...base,
                     type: ComponentType.RoleSelect,
-                    roles: this.resolved.roles,
+                    roles: new Map([...this.resolved.roles].filter(([, role]) => valueSet.has(role.id))),
                 };
 
                 return data as T;
@@ -259,7 +261,7 @@ class ModalSubmitInteraction extends BaseInteraction {
                 const data: ChannelSelectMenuModalData = {
                     ...base,
                     type: ComponentType.ChannelSelect,
-                    channels: this.resolved.channels,
+                    channels: new Map([...this.resolved.channels].filter(([, channel]) => valueSet.has(channel.id))),
                 };
 
                 return data as T;
@@ -269,10 +271,10 @@ class ModalSubmitInteraction extends BaseInteraction {
                 const data: MentionableSelectMenuModalData = {
                     ...base,
                     type: ComponentType.MentionableSelect,
-                    users: this.resolved.users,
-                    members: this.resolved.members,
-                    roles: this.resolved.roles,
-                    channels: this.resolved.channels,
+                    users: new Map([...this.resolved.users].filter(([, user]) => valueSet.has(user.id))),
+                    members: new Map([...this.resolved.members].filter(([, member]) => valueSet.has(member.user.id))),
+                    roles: new Map([...this.resolved.roles].filter(([, role]) => valueSet.has(role.id))),
+                    channels: new Map([...this.resolved.channels].filter(([, channel]) => valueSet.has(channel.id))),
                 };
 
                 return data as T;

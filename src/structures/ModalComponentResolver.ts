@@ -4,8 +4,21 @@ import { APIRole, ChannelType, ComponentType } from 'discord-api-types/v10';
 import { Attachment } from "./Attachment";
 import { User } from "./User";
 import { ResolvedGuildMember } from "./ResolvedGuildMember";
-import { ResolvedData } from "../utils/util";
-import { ChannelSelectMenuModalData, CheckboxGroupModalData, CheckboxModalData, FileUploadModalData, LabelModalData, MentionableSelectMenuModalData, ModalData, ModalDataWithCustomId, RadioGroupModalData, RoleSelectMenuModalData, SelectMenuModalData, TextDisplayModalData, TextInputModalData, UserSelectMenuModalData } from "./ModalSubmitInteraction";
+import {
+	ChannelSelectMenuModalData,
+	CheckboxGroupModalData,
+	CheckboxModalData,
+	FileUploadModalData,
+	LabelModalData,
+	MentionableSelectMenuModalData,
+	ModalData,
+	ModalDataWithCustomId,
+	RadioGroupModalData,
+	RoleSelectMenuModalData,
+	SelectMenuModalData,
+	TextInputModalData,
+	UserSelectMenuModalData
+} from "./ModalSubmitInteraction";
 
 interface ModalSelectedMentionables {
 	users: Map<string, User>;
@@ -69,9 +82,6 @@ class ModalComponentResolver extends Base {
 
 	/**
 	 * Gets the value of a text input component
-	 *
-	 * @param {string} customId The custom id of the text input component
-	 * @returns {string}
 	 */
 	getTextInputValue(customId: string): string {
 		return this._getTypedComponent<TextInputModalData>(customId, [ComponentType.TextInput]).value;
@@ -79,9 +89,6 @@ class ModalComponentResolver extends Base {
 
 	/**
 	 * Gets the values of a string select component
-	 *
-	 * @param {string} customId The custom id of the string select component
-	 * @returns {string[]}
 	 */
 	getStringSelectValues(customId: string): string[] {
 		return this._getTypedComponent<SelectMenuModalData>(customId, [ComponentType.StringSelect]).values;

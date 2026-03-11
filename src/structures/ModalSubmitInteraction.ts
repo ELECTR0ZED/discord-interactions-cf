@@ -103,10 +103,10 @@ export interface TextInputModalData extends BaseModalData {
 
 export interface TextDisplayModalData extends BaseModalData {
     type: ComponentType.TextDisplay;
-    customId: '';
 }
 
 export type ModalData = SelectMenuModalData | FileUploadModalData | RadioGroupModalData | CheckboxGroupModalData | CheckboxModalData | TextInputModalData | TextDisplayModalData;
+export type ModalDataWithCustomId = Exclude<ModalData, TextDisplayModalData>;
 export type ModalComponentWithValues = SelectMenuModalData | FileUploadModalData | CheckboxGroupModalData;
 export type ModalComponentWithValue = TextInputModalData | CheckboxModalData | RadioGroupModalData;
 
@@ -190,18 +190,21 @@ class ModalSubmitInteraction extends BaseInteraction {
                     values: rawComponent.values,
                 };
             case ComponentType.StringSelect:
+                return this.transformSelect<StringSelectMenuModalData>(rawComponent, resolved);
             case ComponentType.UserSelect:
+                return this.transformSelect<UserSelectMenuModalData>(rawComponent, resolved);
             case ComponentType.RoleSelect:
+                return this.transformSelect<RoleSelectMenuModalData>(rawComponent, resolved);
             case ComponentType.MentionableSelect:
+                return this.transformSelect<MentionableSelectMenuModalData>(rawComponent, resolved);
             case ComponentType.ChannelSelect:
-                return this.transformSelect(rawComponent, resolved);
+                return this.transformSelect<ChannelSelectMenuModalData>(rawComponent, resolved);
             case ComponentType.FileUpload:
                 return this.transformFileUpload(rawComponent, resolved);
             case ComponentType.TextDisplay:
                 return {
                     type: rawComponent.type,
                     id: rawComponent.id,
-                    customId: '',
                 };
             case ComponentType.ActionRow:
                 throw new Error(`ActionRow components are deprecated in modals`);
@@ -212,7 +215,7 @@ class ModalSubmitInteraction extends BaseInteraction {
         }
     }
 
-    private transformSelect(
+    private transformSelect<T extends SelectMenuModalData>(
         rawComponent:
             | Extract<ModalSubmitComponent, { type: ComponentType.StringSelect }>
             | Extract<ModalSubmitComponent, { type: ComponentType.UserSelect }>
@@ -220,7 +223,7 @@ class ModalSubmitInteraction extends BaseInteraction {
             | Extract<ModalSubmitComponent, { type: ComponentType.MentionableSelect }>
             | Extract<ModalSubmitComponent, { type: ComponentType.ChannelSelect }>,
         resolved?: APIInteractionDataResolved,
-    ): SelectMenuModalData {
+    ): T {
         const data = {
             type: rawComponent.type,
             id: rawComponent.id,
@@ -229,7 +232,7 @@ class ModalSubmitInteraction extends BaseInteraction {
         } as SelectMenuModalData;
 
         if (!resolved) {
-            return data;
+            return data as T;
         }
 
         const valueSet = new Set(rawComponent.values);
@@ -299,7 +302,7 @@ class ModalSubmitInteraction extends BaseInteraction {
             }
         }
 
-        return data;
+        return data as T;
     }
 
 

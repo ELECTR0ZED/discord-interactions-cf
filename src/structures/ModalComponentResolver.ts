@@ -5,7 +5,7 @@ import { Attachment } from "./Attachment";
 import { User } from "./User";
 import { ResolvedGuildMember } from "./ResolvedGuildMember";
 import { ResolvedData } from "../utils/util";
-import { ChannelSelectMenuModalData, CheckboxGroupModalData, CheckboxModalData, FileUploadModalData, LabelModalData, MentionableSelectMenuModalData, ModalData, RadioGroupModalData, RoleSelectMenuModalData, SelectMenuModalData, TextInputModalData, UserSelectMenuModalData } from "./ModalSubmitInteraction";
+import { ChannelSelectMenuModalData, CheckboxGroupModalData, CheckboxModalData, FileUploadModalData, LabelModalData, MentionableSelectMenuModalData, ModalData, ModalDataWithCustomId, RadioGroupModalData, RoleSelectMenuModalData, SelectMenuModalData, TextDisplayModalData, TextInputModalData, UserSelectMenuModalData } from "./ModalSubmitInteraction";
 
 interface ModalSelectedMentionables {
 	users: Map<string, User>;
@@ -16,7 +16,7 @@ interface ModalSelectedMentionables {
 class ModalComponentResolver extends Base {
 	resolved: ResolvedData;
 	data: LabelModalData[];
-	hoistedComponents: Map<string, ModalData>;
+	hoistedComponents: Map<string, ModalDataWithCustomId>;
 
 	constructor(client: Client, components: LabelModalData[], resolved: ResolvedData) {
 		super(client);
@@ -31,11 +31,19 @@ class ModalComponentResolver extends Base {
 		/**
 		 * The bottom-level components of the interaction
 		 */
-		this.hoistedComponents = components.reduce((accumulator: Map<string, ModalData>, next: LabelModalData) => {
-			accumulator.set(next.component.customId, next.component);
+		this.hoistedComponents = components.reduce((accumulator: Map<string, ModalDataWithCustomId>, next: LabelModalData) => {
+			const component = next.component;
+
+			if (this.hasCustomId(component)) {
+				accumulator.set(component.customId, component);
+			}
 
 			return accumulator;
-		}, new Map<string, ModalData>());
+		}, new Map<string, ModalDataWithCustomId>());
+	}
+
+	private hasCustomId(component: ModalData): component is ModalDataWithCustomId {
+		return 'customId' in component;
 	}
 
 	/**

@@ -161,7 +161,7 @@ class ModalComponentResolver extends Base {
 	/**
 	 * Gets file upload component
 	 */
-	getUploadedFiles(customId: string): Map<string, Attachment> | null {
+	getUploadedFiles(customId: string): Map<string, Attachment> {
 		return this._getTypedComponent<FileUploadModalData>(customId, [ComponentType.FileUpload]).attachments;
 	}
 

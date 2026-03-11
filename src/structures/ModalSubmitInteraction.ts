@@ -224,85 +224,160 @@ class ModalSubmitInteraction extends BaseInteraction {
             | Extract<ModalSubmitComponent, { type: ComponentType.ChannelSelect }>,
         resolved?: APIInteractionDataResolved,
     ): T {
-        const data = {
+        const base = {
             type: rawComponent.type,
             id: rawComponent.id,
             customId: rawComponent.custom_id,
             values: rawComponent.values,
-        } as SelectMenuModalData;
+        };
 
-        if (!resolved) {
-            return data as T;
-        }
+        switch (rawComponent.type) {
+            case ComponentType.StringSelect:
+                return base as T;
 
-        const valueSet = new Set(rawComponent.values);
-        const { members, users, channels, roles } = resolved;
+            case ComponentType.UserSelect: {
+                const data: UserSelectMenuModalData = {
+                    ...base,
+                    type: ComponentType.UserSelect,
+                    users: new Map<string, User>(),
+                    members: new Map<string, ResolvedGuildMember>(),
+                };
 
-        if (
-            (rawComponent.type === ComponentType.UserSelect || rawComponent.type === ComponentType.MentionableSelect) &&
-            users
-        ) {
-            const mappedUsers = new Map<string, User>();
-
-            for (const [id, user] of Object.entries(users)) {
-                if (valueSet.has(id)) {
-                    mappedUsers.set(id, new User(this.client, user));
+                if (!resolved) {
+                    return data as T;
                 }
-            }
 
-            (data as UserSelectMenuModalData | MentionableSelectMenuModalData).users = mappedUsers;
-        }
+                const valueSet = new Set(rawComponent.values);
 
-        if (
-            (rawComponent.type === ComponentType.ChannelSelect || rawComponent.type === ComponentType.MentionableSelect) &&
-            channels
-        ) {
-            const mappedChannels = new Map<string, APIInteractionDataResolvedChannel>();
-
-            for (const [id, channel] of Object.entries(channels)) {
-                if (valueSet.has(id)) {
-                    mappedChannels.set(id, channel);
-                }
-            }
-
-            (data as ChannelSelectMenuModalData | MentionableSelectMenuModalData).channels = mappedChannels;
-        }
-
-        if (
-            (rawComponent.type === ComponentType.RoleSelect || rawComponent.type === ComponentType.MentionableSelect) &&
-            roles
-        ) {
-            const mappedRoles = new Map<string, APIRole>();
-
-            for (const [id, role] of Object.entries(roles)) {
-                if (valueSet.has(id)) {
-                    mappedRoles.set(id, role);
-                }
-            }
-
-            (data as RoleSelectMenuModalData | MentionableSelectMenuModalData).roles = mappedRoles;
-        }
-
-        if (
-            (rawComponent.type === ComponentType.UserSelect || rawComponent.type === ComponentType.MentionableSelect) &&
-            members
-        ) {
-            const dataWithMembers = data as UserSelectMenuModalData | MentionableSelectMenuModalData;
-            dataWithMembers.members = new Map();
-
-            for (const [id, member] of Object.entries(members)) {
-                if (valueSet.has(id)) {
-                    const user = dataWithMembers.users.get(id);
-                    if (!user) {
-                        throw new Error('User is missing when resolving member in modal submit interaction');
+                if (resolved.users) {
+                    for (const [id, user] of Object.entries(resolved.users)) {
+                        if (valueSet.has(id)) {
+                            data.users.set(id, new User(this.client, user));
+                        }
                     }
-
-                    dataWithMembers.members.set(id, new ResolvedGuildMember(this.client, member, user, this.guild!));
                 }
+
+                if (resolved.members) {
+                    for (const [id, member] of Object.entries(resolved.members)) {
+                        if (valueSet.has(id)) {
+                            const user = data.users.get(id);
+                            if (!user) {
+                                throw new Error('User is missing when resolving member in modal submit interaction');
+                            }
+
+                            data.members.set(id, new ResolvedGuildMember(this.client, member, user, this.guild!));
+                        }
+                    }
+                }
+
+                return data as T;
+            }
+
+            case ComponentType.RoleSelect: {
+                const data: RoleSelectMenuModalData = {
+                    ...base,
+                    type: ComponentType.RoleSelect,
+                    roles: new Map<string, APIRole>(),
+                };
+
+                if (!resolved?.roles) {
+                    return data as T;
+                }
+
+                const valueSet = new Set(rawComponent.values);
+
+                for (const [id, role] of Object.entries(resolved.roles)) {
+                    if (valueSet.has(id)) {
+                        data.roles.set(id, role);
+                    }
+                }
+
+                return data as T;
+            }
+
+            case ComponentType.ChannelSelect: {
+                const data: ChannelSelectMenuModalData = {
+                    ...base,
+                    type: ComponentType.ChannelSelect,
+                    channels: new Map<string, APIInteractionDataResolvedChannel>(),
+                };
+
+                if (!resolved?.channels) {
+                    return data as T;
+                }
+
+                const valueSet = new Set(rawComponent.values);
+
+                for (const [id, channel] of Object.entries(resolved.channels)) {
+                    if (valueSet.has(id)) {
+                        data.channels.set(id, channel);
+                    }
+                }
+
+                return data as T;
+            }
+
+            case ComponentType.MentionableSelect: {
+                const data: MentionableSelectMenuModalData = {
+                    ...base,
+                    type: ComponentType.MentionableSelect,
+                    users: new Map<string, User>(),
+                    members: new Map<string, ResolvedGuildMember>(),
+                    roles: new Map<string, APIRole>(),
+                    channels: new Map<string, APIInteractionDataResolvedChannel>(),
+                };
+
+                if (!resolved) {
+                    return data as T;
+                }
+
+                const valueSet = new Set(rawComponent.values);
+
+                if (resolved.users) {
+                    for (const [id, user] of Object.entries(resolved.users)) {
+                        if (valueSet.has(id)) {
+                            data.users.set(id, new User(this.client, user));
+                        }
+                    }
+                }
+
+                if (resolved.channels) {
+                    for (const [id, channel] of Object.entries(resolved.channels)) {
+                        if (valueSet.has(id)) {
+                            data.channels.set(id, channel);
+                        }
+                    }
+                }
+
+                if (resolved.roles) {
+                    for (const [id, role] of Object.entries(resolved.roles)) {
+                        if (valueSet.has(id)) {
+                            data.roles.set(id, role);
+                        }
+                    }
+                }
+
+                if (resolved.members) {
+                    for (const [id, member] of Object.entries(resolved.members)) {
+                        if (valueSet.has(id)) {
+                            const user = data.users.get(id);
+                            if (!user) {
+                                throw new Error('User is missing when resolving member in modal submit interaction');
+                            }
+
+                            data.members.set(id, new ResolvedGuildMember(this.client, member, user, this.guild!));
+                        }
+                    }
+                }
+
+                return data as T;
+            }
+
+            default: {
+                const exhaustiveCheck: never = rawComponent;
+                throw new Error(`Unsupported select component type: ${(exhaustiveCheck as { type: number }).type}`);
             }
         }
-
-        return data as T;
     }
 
 

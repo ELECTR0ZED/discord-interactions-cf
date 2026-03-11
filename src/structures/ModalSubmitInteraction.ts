@@ -8,14 +8,14 @@ import {
     APIRole,
     APIInteractionDataResolvedChannel,
     ModalSubmitLabelComponent,
-    ModalSubmitActionRowComponent,
     APIModalSubmitTextInputComponent,
     ModalSubmitComponent,
 } from 'discord-api-types/v10';
-import { ModalSubmitFields } from './ModalSubmitFields';
 import { User } from './User';
 import { Attachment } from './Attachment';
 import { ResolvedGuildMember } from './ResolvedGuildMember';
+import { ModalComponentResolver } from './ModalComponentResolver';
+import { transformResolved } from '../utils/util';
 
 export interface BaseModalData {
     type: ComponentType;
@@ -95,34 +95,24 @@ export type AnyModalDataByType = ModalDataByType[keyof ModalDataByType];
 
 class ModalSubmitInteraction extends BaseInteraction {
     customId: string;
-    components: ActionRowModalData[];
-    fields: ModalSubmitFields;
+    components: ModalComponentResolver;
 
     constructor(client: Client, data: APIModalSubmitInteraction) {
         super(client, data);
 
         this.customId = data.data.custom_id;
 
-        this.components = (data.data.components?.map(component => this.transformComponent(component, data.data.resolved)) ?? []) as ActionRowModalData[];
-
-        this.fields = new ModalSubmitFields(this.components);
+        this.components = new ModalComponentResolver(
+            this.client,
+            data.data.components?.map(component => this.transformComponent(component, data.data.resolved)) as LabelModalData[],
+            transformResolved(client, this.guild, data.data.resolved),
+        );
     }
 
     transformComponent(
         rawComponent: APIModalSubmissionComponent|APIModalSubmitTextInputComponent|ModalSubmitComponent,
         resolved?: APIInteractionDataResolved
-    ): ActionRowModalData | LabelModalData | ModalData {
-        if ('components' in rawComponent && rawComponent.components) {
-            rawComponent = rawComponent as ModalSubmitActionRowComponent;
-            return {
-                type: rawComponent.type,
-                id: rawComponent.id,
-                components: rawComponent.components.map((component) =>
-                    this.transformComponent(component, resolved)
-                ),
-            } as ActionRowModalData;
-        }
-
+    ): LabelModalData | ModalData {
         if ('component' in rawComponent) {
             rawComponent = rawComponent as ModalSubmitLabelComponent;
             return {

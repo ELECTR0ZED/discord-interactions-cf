@@ -1,6 +1,6 @@
 {
   "name": "@electr0zed/discord-interactions-cf",
-  "version": "0.16.23",
+  "version": "0.17.23",
   "description": "Framework for accepting Interactions from Discord on Cloudflare workers",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,7 +24,6 @@
   "dependencies": {
     "@discordjs/builders": "^1.13.1",
     "@discordjs/rest": "^2.6.0",
-    "@sapphire/snowflake": "^3.5.5",
     "discord-api-types": "^0.38.40"
   }
 }

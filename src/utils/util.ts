@@ -18,13 +18,13 @@ export function transformResolved(
 	guild?: PartialInteractionGuild,
 	{ members, users, channels, roles, attachments }: APIInteractionDataResolved = {},
 ): ResolvedData {
-	const result = {
+	const result: ResolvedData = {
 		users: new Map<string, User>(),
 		members: new Map<string, ResolvedGuildMember>(),
 		roles: new Map<string, APIRole>(),
 		channels: new Map<string, APIInteractionDataResolvedChannel>(),
 		attachments: new Map<string, Attachment>(),
-	} as ResolvedData;
+	};
 
 	if (users) {
 		for (const user of Object.values(users)) {

@@ -5,7 +5,7 @@ import { Attachment } from "./Attachment";
 import { User } from "./User";
 import { ResolvedGuildMember } from "./ResolvedGuildMember";
 import { ResolvedData } from "../utils/util";
-import { CheckboxGroupModalData, CheckboxModalData, FileUploadModalData, LabelModalData, ModalData, RadioGroupModalData, SelectMenuModalData, TextInputModalData } from "./ModalSubmitInteraction";
+import { ChannelSelectMenuModalData, CheckboxGroupModalData, CheckboxModalData, FileUploadModalData, LabelModalData, MentionableSelectMenuModalData, ModalData, RadioGroupModalData, RoleSelectMenuModalData, SelectMenuModalData, TextInputModalData, UserSelectMenuModalData } from "./ModalSubmitInteraction";
 
 interface ModalSelectedMentionables {
 	users: Map<string, User>;
@@ -86,7 +86,7 @@ class ModalComponentResolver extends Base {
 	 * Gets users component
 	 */
 	getSelectedUsers(customId: string) {
-		const component = this._getTypedComponent<SelectMenuModalData>(
+		const component = this._getTypedComponent<UserSelectMenuModalData>(
 			customId,
 			[ComponentType.UserSelect, ComponentType.MentionableSelect],
 		);
@@ -97,7 +97,7 @@ class ModalComponentResolver extends Base {
 	 * Gets roles component
 	 */
 	getSelectedRoles(customId: string) {
-		const component = this._getTypedComponent<SelectMenuModalData>(
+		const component = this._getTypedComponent<RoleSelectMenuModalData>(
 			customId,
 			[ComponentType.RoleSelect, ComponentType.MentionableSelect],
 		);
@@ -109,7 +109,7 @@ class ModalComponentResolver extends Base {
 	 * Gets channels component
 	 */
 	getSelectedChannels(customId: string, channelTypes: ChannelType[] = []) {
-		const component = this._getTypedComponent<SelectMenuModalData>(customId, [ComponentType.ChannelSelect]);
+		const component = this._getTypedComponent<ChannelSelectMenuModalData>(customId, [ComponentType.ChannelSelect]);
 		const channels = component.channels;
 		if (channels && channelTypes.length > 0) {
 			for (const channel of channels.values()) {
@@ -126,7 +126,7 @@ class ModalComponentResolver extends Base {
 	 * Gets members component
 	 */
 	getSelectedMembers(customId: string) {
-		const component = this._getTypedComponent<SelectMenuModalData>(
+		const component = this._getTypedComponent<UserSelectMenuModalData>(
 			customId,
 			[ComponentType.UserSelect, ComponentType.MentionableSelect],
 		);
@@ -138,7 +138,7 @@ class ModalComponentResolver extends Base {
 	 * Gets mentionables component
 	 */
 	getSelectedMentionables(customId: string): ModalSelectedMentionables {
-		const component = this._getTypedComponent<SelectMenuModalData>(
+		const component = this._getTypedComponent<MentionableSelectMenuModalData>(
 			customId,
 			[ComponentType.MentionableSelect],
 		);

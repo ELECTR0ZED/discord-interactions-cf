@@ -46,7 +46,7 @@ export * from './structures/InteractionResponseCallback';
 export * from './structures/Message';
 export * from './structures/MessageComponentInteraction';
 export * from './structures/MessageContextMenuCommandInteraction';
-export * from './structures/ModalSubmitFields';
+export * from './structures/ModalComponentResolver';
 export * from './structures/ModalSubmitInteraction';
 export * from './structures/PartialInteractionChannel';
 export * from './structures/PartialInteractionGuild';

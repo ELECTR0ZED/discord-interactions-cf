@@ -14,14 +14,11 @@ interface ModalSelectedMentionables {
 }
 
 class ModalComponentResolver extends Base {
-	resolved: ResolvedData;
 	data: LabelModalData[];
 	hoistedComponents: Map<string, ModalDataWithCustomId>;
 
-	constructor(client: Client, components: LabelModalData[], resolved: ResolvedData) {
+	constructor(client: Client, components: LabelModalData[]) {
 		super(client);
-
-		this.resolved = resolved;
 
 		/**
 		 * The components within the modal
@@ -49,7 +46,7 @@ class ModalComponentResolver extends Base {
 	/**
 	 * Gets a component by custom id.
 	 */
-	getComponent<T extends ModalData>(customId: string): T {
+	getComponent<T extends ModalDataWithCustomId>(customId: string): T {
 		const component = this.hoistedComponents.get(customId);
 
 		if (!component) throw new Error(`No component found for custom id ${customId}`);
@@ -60,7 +57,7 @@ class ModalComponentResolver extends Base {
 	/**
 	 * Gets a component by custom id and property and checks its type.
 	 */
-	_getTypedComponent<T extends ModalData>(customId: string, allowedTypes: ComponentType[]): T {
+	_getTypedComponent<T extends ModalDataWithCustomId>(customId: string, allowedTypes: ComponentType[]): T {
 		const component = this.getComponent<T>(customId);
 
 		if (!allowedTypes.includes(component.type)) {

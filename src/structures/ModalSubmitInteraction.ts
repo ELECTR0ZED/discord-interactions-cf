@@ -146,7 +146,6 @@ class ModalSubmitInteraction extends BaseInteraction {
         this.components = new ModalComponentResolver(
             this.client,
             data.data.components.map(component => this.transformComponent(component, data.data.resolved)) as LabelModalData[],
-            this.resolved,
         );
     }
 
@@ -239,36 +238,9 @@ class ModalSubmitInteraction extends BaseInteraction {
                 const data: UserSelectMenuModalData = {
                     ...base,
                     type: ComponentType.UserSelect,
-                    users: new Map<string, User>(),
-                    members: new Map<string, ResolvedGuildMember>(),
+                    users: this.resolved.users,
+                    members: this.resolved.members,
                 };
-
-                if (!resolved) {
-                    return data as T;
-                }
-
-                const valueSet = new Set(rawComponent.values);
-
-                if (resolved.users) {
-                    for (const [id, user] of Object.entries(resolved.users)) {
-                        if (valueSet.has(id)) {
-                            data.users.set(id, new User(this.client, user));
-                        }
-                    }
-                }
-
-                if (resolved.members) {
-                    for (const [id, member] of Object.entries(resolved.members)) {
-                        if (valueSet.has(id)) {
-                            const user = data.users.get(id);
-                            if (!user) {
-                                throw new Error('User is missing when resolving member in modal submit interaction');
-                            }
-
-                            data.members.set(id, new ResolvedGuildMember(this.client, member, user, this.guild!));
-                        }
-                    }
-                }
 
                 return data as T;
             }
@@ -277,20 +249,8 @@ class ModalSubmitInteraction extends BaseInteraction {
                 const data: RoleSelectMenuModalData = {
                     ...base,
                     type: ComponentType.RoleSelect,
-                    roles: new Map<string, APIRole>(),
+                    roles: this.resolved.roles,
                 };
-
-                if (!resolved?.roles) {
-                    return data as T;
-                }
-
-                const valueSet = new Set(rawComponent.values);
-
-                for (const [id, role] of Object.entries(resolved.roles)) {
-                    if (valueSet.has(id)) {
-                        data.roles.set(id, role);
-                    }
-                }
 
                 return data as T;
             }
@@ -299,20 +259,8 @@ class ModalSubmitInteraction extends BaseInteraction {
                 const data: ChannelSelectMenuModalData = {
                     ...base,
                     type: ComponentType.ChannelSelect,
-                    channels: new Map<string, APIInteractionDataResolvedChannel>(),
+                    channels: this.resolved.channels,
                 };
-
-                if (!resolved?.channels) {
-                    return data as T;
-                }
-
-                const valueSet = new Set(rawComponent.values);
-
-                for (const [id, channel] of Object.entries(resolved.channels)) {
-                    if (valueSet.has(id)) {
-                        data.channels.set(id, channel);
-                    }
-                }
 
                 return data as T;
             }
@@ -321,54 +269,11 @@ class ModalSubmitInteraction extends BaseInteraction {
                 const data: MentionableSelectMenuModalData = {
                     ...base,
                     type: ComponentType.MentionableSelect,
-                    users: new Map<string, User>(),
-                    members: new Map<string, ResolvedGuildMember>(),
-                    roles: new Map<string, APIRole>(),
-                    channels: new Map<string, APIInteractionDataResolvedChannel>(),
+                    users: this.resolved.users,
+                    members: this.resolved.members,
+                    roles: this.resolved.roles,
+                    channels: this.resolved.channels,
                 };
-
-                if (!resolved) {
-                    return data as T;
-                }
-
-                const valueSet = new Set(rawComponent.values);
-
-                if (resolved.users) {
-                    for (const [id, user] of Object.entries(resolved.users)) {
-                        if (valueSet.has(id)) {
-                            data.users.set(id, new User(this.client, user));
-                        }
-                    }
-                }
-
-                if (resolved.channels) {
-                    for (const [id, channel] of Object.entries(resolved.channels)) {
-                        if (valueSet.has(id)) {
-                            data.channels.set(id, channel);
-                        }
-                    }
-                }
-
-                if (resolved.roles) {
-                    for (const [id, role] of Object.entries(resolved.roles)) {
-                        if (valueSet.has(id)) {
-                            data.roles.set(id, role);
-                        }
-                    }
-                }
-
-                if (resolved.members) {
-                    for (const [id, member] of Object.entries(resolved.members)) {
-                        if (valueSet.has(id)) {
-                            const user = data.users.get(id);
-                            if (!user) {
-                                throw new Error('User is missing when resolving member in modal submit interaction');
-                            }
-
-                            data.members.set(id, new ResolvedGuildMember(this.client, member, user, this.guild!));
-                        }
-                    }
-                }
 
                 return data as T;
             }

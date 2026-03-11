@@ -70,7 +70,7 @@ class ModalComponentResolver extends Base {
 	/**
 	 * Gets a component by custom id and property and checks its type.
 	 */
-	_getTypedComponent<T extends ModalDataWithCustomId>(customId: string, allowedTypes: ComponentType[]): T {
+	getTypedComponent<T extends ModalDataWithCustomId>(customId: string, allowedTypes: ComponentType[]): T {
 		const component = this.getComponent<T>(customId);
 
 		if (!allowedTypes.includes(component.type)) {
@@ -84,21 +84,21 @@ class ModalComponentResolver extends Base {
 	 * Gets the value of a text input component
 	 */
 	getTextInputValue(customId: string): string {
-		return this._getTypedComponent<TextInputModalData>(customId, [ComponentType.TextInput]).value;
+		return this.getTypedComponent<TextInputModalData>(customId, [ComponentType.TextInput]).value;
 	}
 
 	/**
 	 * Gets the values of a string select component
 	 */
 	getStringSelectValues(customId: string): string[] {
-		return this._getTypedComponent<SelectMenuModalData>(customId, [ComponentType.StringSelect]).values;
+		return this.getTypedComponent<SelectMenuModalData>(customId, [ComponentType.StringSelect]).values;
 	}
 
 	/**
 	 * Gets users component
 	 */
 	getSelectedUsers(customId: string) {
-		const component = this._getTypedComponent<UserSelectMenuModalData>(
+		const component = this.getTypedComponent<UserSelectMenuModalData>(
 			customId,
 			[ComponentType.UserSelect, ComponentType.MentionableSelect],
 		);
@@ -109,7 +109,7 @@ class ModalComponentResolver extends Base {
 	 * Gets roles component
 	 */
 	getSelectedRoles(customId: string) {
-		const component = this._getTypedComponent<RoleSelectMenuModalData>(
+		const component = this.getTypedComponent<RoleSelectMenuModalData>(
 			customId,
 			[ComponentType.RoleSelect, ComponentType.MentionableSelect],
 		);
@@ -121,7 +121,7 @@ class ModalComponentResolver extends Base {
 	 * Gets channels component
 	 */
 	getSelectedChannels(customId: string, channelTypes: ChannelType[] = []) {
-		const component = this._getTypedComponent<ChannelSelectMenuModalData>(customId, [ComponentType.ChannelSelect]);
+		const component = this.getTypedComponent<ChannelSelectMenuModalData>(customId, [ComponentType.ChannelSelect]);
 		const channels = component.channels;
 		if (channels && channelTypes.length > 0) {
 			for (const channel of channels.values()) {
@@ -138,7 +138,7 @@ class ModalComponentResolver extends Base {
 	 * Gets members component
 	 */
 	getSelectedMembers(customId: string) {
-		const component = this._getTypedComponent<UserSelectMenuModalData>(
+		const component = this.getTypedComponent<UserSelectMenuModalData>(
 			customId,
 			[ComponentType.UserSelect, ComponentType.MentionableSelect],
 		);
@@ -150,7 +150,7 @@ class ModalComponentResolver extends Base {
 	 * Gets mentionables component
 	 */
 	getSelectedMentionables(customId: string): ModalSelectedMentionables {
-		const component = this._getTypedComponent<MentionableSelectMenuModalData>(
+		const component = this.getTypedComponent<MentionableSelectMenuModalData>(
 			customId,
 			[ComponentType.MentionableSelect],
 		);
@@ -166,28 +166,28 @@ class ModalComponentResolver extends Base {
 	 * Gets file upload component
 	 */
 	getUploadedFiles(customId: string): Map<string, Attachment> {
-		return this._getTypedComponent<FileUploadModalData>(customId, [ComponentType.FileUpload]).attachments;
+		return this.getTypedComponent<FileUploadModalData>(customId, [ComponentType.FileUpload]).attachments;
 	}
 
 	/**
 	 * Get radio group component
 	 */
 	getRadioGroup(customId: string): string | null {
-		return this._getTypedComponent<RadioGroupModalData>(customId, [ComponentType.RadioGroup]).value;
+		return this.getTypedComponent<RadioGroupModalData>(customId, [ComponentType.RadioGroup]).value;
 	}
 
 	/**
 	 * Get checkbox group component
 	 */
 	getCheckboxGroup(customId: string): string[] {
-		return this._getTypedComponent<CheckboxGroupModalData>(customId, [ComponentType.CheckboxGroup]).values;
+		return this.getTypedComponent<CheckboxGroupModalData>(customId, [ComponentType.CheckboxGroup]).values;
 	}
 
 	/**
 	 * Get checkbox component
 	 */
 	getCheckbox(customId: string): boolean {
-		return this._getTypedComponent<CheckboxModalData>(customId, [ComponentType.Checkbox]).value;
+		return this.getTypedComponent<CheckboxModalData>(customId, [ComponentType.Checkbox]).value;
 	}
 }
 

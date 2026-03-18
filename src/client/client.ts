@@ -27,7 +27,7 @@ import handleModalSubmit from "../handlers/ModalSubmit";
 import handleContextMenuApplicationCommand from "../handlers/ApplicationCommand/ContextMenu";
 import { ContextMenuCommandBuilder } from "../builders/ContextMenuCommandBuilder";
 
-export type anyInteraction = 
+export type AnyInteraction = 
     | ChatInputCommandInteraction
     | UserContextMenuCommandInteraction
     | MessageContextMenuCommandInteraction
@@ -36,7 +36,7 @@ export type anyInteraction =
     | ModalSubmitInteraction;
 
 export type Hook = (
-    interaction: anyInteraction,
+    interaction: AnyInteraction,
     env: Env,
 ) => Promise<any> | any;
 
@@ -49,9 +49,9 @@ export type Hooks = {
 
 export type ErrorHandler = (
 	error: unknown,
-	interaction: anyInteraction,
+	interaction: AnyInteraction,
 	env: Env,
-) => Promise<APIInteractionResponse | null> | APIInteractionResponse | null;
+) => Promise<void> | void;
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
@@ -215,7 +215,7 @@ class Client {
      */
     async runHooks(
         hooks: Hook[],
-        interaction: anyInteraction,
+        interaction: AnyInteraction,
         env: Env,
     ): Promise<boolean> {
         for (const hook of hooks) {
@@ -336,7 +336,7 @@ class Client {
         return this.respond(interaction.response);
     }
 
-    private async dispatchInteraction(interaction: anyInteraction, env: Env) {
+    private async dispatchInteraction(interaction: AnyInteraction, env: Env) {
         // Handle interaction types here
         switch (interaction.type) {
             case InteractionType.ApplicationCommand:

@@ -20,6 +20,7 @@ declare module '@discordjs/builders' {
 }
 
 export * from './client/client';
+export { default as Client } from './client/client';
 export * from '@discordjs/builders';
 export { registerCommands, AutocompleteInteraction };
 export * from 'discord-api-types/v10';

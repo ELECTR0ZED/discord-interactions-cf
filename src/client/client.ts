@@ -27,7 +27,7 @@ import handleModalSubmit from "../handlers/ModalSubmit";
 import handleContextMenuApplicationCommand from "../handlers/ApplicationCommand/ContextMenu";
 import { ContextMenuCommandBuilder } from "../builders/ContextMenuCommandBuilder";
 
-type anyInteraction = 
+export type anyInteraction = 
     | ChatInputCommandInteraction
     | UserContextMenuCommandInteraction
     | MessageContextMenuCommandInteraction
@@ -35,17 +35,23 @@ type anyInteraction =
     | AutocompleteInteraction
     | ModalSubmitInteraction;
 
-type Hook = (
+export type Hook = (
     interaction: anyInteraction,
     env: Env,
 ) => Promise<any> | any;
 
-type Hooks = {
+export type Hooks = {
     [key in InteractionType]: {
         before: Hook[];
         after: Hook[];
     }
 }
+
+export type ErrorHandler = (
+	error: unknown,
+	interaction: anyInteraction,
+	env: Env,
+) => Promise<APIInteractionResponse | null> | APIInteractionResponse | null;
 
 class Client {
     commands: Map<string, SlashCommandBuilder> = new Map();
@@ -61,8 +67,8 @@ class Client {
         [InteractionType.MessageComponent]: { before: [], after: [] },
         [InteractionType.ApplicationCommandAutocomplete]: { before: [], after: [] },
         [InteractionType.ModalSubmit]: { before: [], after: [] },
-
     };
+    private errorHandler?: ErrorHandler;
 
     constructor(customIdDelimiter?: string) {
         if (customIdDelimiter) {
@@ -197,6 +203,11 @@ class Client {
         return this;
     }
 
+    setErrorHandler(fn: ErrorHandler) {
+        this.errorHandler = fn;
+        return this;
+    }
+
     /**
      * Run an array of hooks in sequence.  
      * → If any returns (or resolves to) false, stop and return false.  
@@ -208,8 +219,13 @@ class Client {
         env: Env,
     ): Promise<boolean> {
         for (const hook of hooks) {
-            const result = await Promise.resolve(hook(interaction, env));
-            if (result === false) return false;
+            try {
+                const result = await Promise.resolve(hook(interaction, env));
+                if (result === false) return false;
+            } catch (error) {
+                console.error('Error in hook:', error);
+                return false; // Stop executing further hooks on error
+            }
         }
 
         return true;
@@ -292,6 +308,35 @@ class Client {
             return new Response(null, { status: 200 });
         }
 
+        let interactionErrored = false;
+
+        try {
+            await this.dispatchInteraction(interaction, env);
+        } catch (error) {
+            console.error('Error handling interaction:', error);
+            if (this.errorHandler) {
+                interactionErrored = true;
+                try {
+                    await Promise.resolve(this.errorHandler(error, interaction, env));
+                } catch (handlerError) {
+                    console.error('Error in error handler:', handlerError);
+                }
+            }
+        }
+
+        const afterResult = await this.runHooks(afterHooks, interaction, env);
+        if (!afterResult && !interactionErrored) {
+            if (interaction.response) {
+                return this.respond(interaction.response);
+            }
+
+            return new Response(null, { status: 200 });
+        }
+
+        return this.respond(interaction.response);
+    }
+
+    private async dispatchInteraction(interaction: anyInteraction, env: Env) {
         // Handle interaction types here
         switch (interaction.type) {
             case InteractionType.ApplicationCommand:
@@ -322,17 +367,6 @@ class Client {
                 console.error('Unknown interaction type:', (interaction as BaseInteraction).type);
                 break;
         }
-
-        const afterResult = await this.runHooks(afterHooks, interaction, env);
-        if (!afterResult) {
-            if (interaction.response) {
-                return this.respond(interaction.response);
-            }
-
-            return new Response(null, { status: 200 });
-        }
-
-        return this.respond(interaction.response);
     }
 
     async registerCommands(token: string, clientId: string) {

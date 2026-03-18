@@ -1,4 +1,3 @@
-import Client from './client/client';
 import { registerCommands } from './utils/registerCommands';
 import { ChatInputCommandInteraction } from './structures/ChatInputCommandInteraction';
 import { APIInteractionResponse } from 'discord-api-types/v10';
@@ -20,8 +19,9 @@ declare module '@discordjs/builders' {
     }
 }
 
+export * from './client/client';
 export * from '@discordjs/builders';
-export { registerCommands, Client, AutocompleteInteraction };
+export { registerCommands, AutocompleteInteraction };
 export * from 'discord-api-types/v10';
 
 // Builders

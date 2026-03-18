@@ -311,7 +311,6 @@ class Client {
 		try {
 			await this.dispatchInteraction(interaction, env);
 		} catch (error) {
-			console.error('Error handling interaction:', error);
 			if (this.errorHandler) {
 				try {
 					await this.errorHandler(error, interaction, env);
